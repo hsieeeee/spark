@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MediaPipe Hands — what is it?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0d12; --panel:#141821; --panel2:#1b2030; --line:#262c3d;
+    --text:#e9ecf3; --muted:#8b93a7; --accent:#7cf4c4; --accent2:#8ab4ff; --warn:#ffcf6b;
+    --thumb:#ff8a8a; --index:#ffcf6b; --middle:#7cf4c4; --ring:#8ab4ff; --pinky:#d79bff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:"Space Grotesk",system-ui,sans-serif;line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+  header h1{font-size:clamp(28px,4vw,46px);margin:0 0 6px;letter-spacing:-.02em}
+  header h1 span{color:var(--accent)}
+  header p{color:var(--muted);margin:0;max-width:760px;font-size:17px}
+  .grid{display:grid;grid-template-columns:1.45fr 1fr;gap:20px;margin-top:26px}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
+  .stage{position:relative;aspect-ratio:4/3;background:#000;border-radius:14px;overflow:hidden}
+  video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:.85}
+  canvas{position:absolute;inset:0;width:100%;height:100%}
+  .overlay-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px;background:radial-gradient(circle at center,#151a26,#07080b)}
+  .overlay-msg p{color:var(--muted);margin:0;max-width:360px}
+  button{font:inherit;background:var(--accent);color:#06281c;border:0;border-radius:999px;padding:12px 22px;font-weight:700;cursor:pointer;font-size:16px}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);padding:6px 12px;font-size:13px;font-weight:500}
+  .bigresult{display:flex;align-items:center;gap:18px;min-height:130px}
+  .bigemoji{font-size:96px;line-height:1;width:120px;text-align:center;transition:transform .15s}
+  .bigemoji.pop{transform:scale(1.18)}
+  .bigname{font-size:26px;font-weight:700}
+  .why{color:var(--muted);font-size:14px;margin-top:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{font-family:"JetBrains Mono",monospace;font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px 8px;color:#cfd5e3}
+  .label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 10px}
+  .gallery{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .g{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 4px 8px;text-align:center;position:relative;transition:all .2s}
+  .g .e{font-size:34px;line-height:1.1;filter:grayscale(1);opacity:.45;transition:all .2s}
+  .g .n{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.2}
+  .g.found .e{filter:none;opacity:1}
+  .g.found::after{content:"✓";position:absolute;top:4px;right:7px;color:var(--accent);font-size:12px;font-weight:700}
+  .g.live{border-color:var(--accent);box-shadow:0 0 0 2px #7cf4c455,0 0 24px #7cf4c433;transform:translateY(-2px)}
+  .g.live .e{filter:none;opacity:1}
+  .bonus{grid-template-columns:repeat(8,1fr);margin-top:8px}
+  .bonus .g .e{font-size:24px}
+  .progress{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .progress b{color:var(--accent)}
+  .tele{font-family:"JetBrains Mono",monospace;font-size:12.5px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;color:#cfd5e3}
+  .tele .k{color:var(--muted)}
+  .fingers{display:flex;gap:6px;margin-top:2px}
+  .f{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#000;opacity:.25}
+  .f.on{opacity:1}
+  .combo{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#000a;border:1px solid var(--accent);padding:6px 14px;border-radius:999px;font-size:15px;display:none;white-space:nowrap}
+  .fps{position:absolute;bottom:10px;left:12px;font-family:"JetBrains Mono",monospace;font-size:11px;color:#fff9;background:#0008;padding:2px 8px;border-radius:6px}
+  section.explain{margin-top:34px}
+  section.explain h2{font-size:28px;margin:0 0 4px;letter-spacing:-.01em}
+  section.explain > p{color:var(--muted);max-width:800px;margin:0 0 18px}
+  .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:stretch}
+  @media (max-width:900px){.pipeline{grid-template-columns:1fr}}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;position:relative}
+  .step .num{font-family:"JetBrains Mono",monospace;color:var(--accent);font-size:12px}
+  .step h3{margin:4px 0 6px;font-size:17px}
+  .step p{margin:0;color:var(--muted);font-size:14px}
+  .step.active{border-color:var(--accent)}
+  .rules{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+  @media (max-width:900px){.rules{grid-template-columns:1fr}}
+  .rule{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .rule .e{font-size:28px;line-height:1}
+  .rule p{margin:0;font-size:14px;color:var(--muted)}
+  .rule p b{color:var(--text);font-weight:500}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .settings{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  footer{margin-top:40px;color:var(--muted);font-size:13px}
+  a{color:var(--accent2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Show me your hand. <span>I'll read it.</span></h1>
+    <p>This page uses <b>MediaPipe</b>, Google's on‑device machine‑learning toolkit, to find your hand in the webcam, place 21 points on it, and turn those points into a gesture. Everything runs in your browser; no video leaves your computer.</p>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <div class="stage" id="stage">
+        <video id="video" playsinline muted></video>
+        <canvas id="canvas"></canvas>
+        <div class="combo" id="combo"></div>
+        <div class="fps" id="fps"></div>
+        <div class="overlay-msg" id="startOverlay">
+          <div style="font-size:64px">✋</div>
+          <p>Allow camera access and hold your hand up in front of the camera.</p>
+          <button id="startBtn">Start camera</button>
+          <p id="status" style="font-size:13px"></p>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--thumb)"></i>thumb</span>
+        <span><i style="background:var(--index)"></i>index</span>
+        <span><i style="background:var(--middle)"></i>middle</span>
+        <span><i style="background:var(--ring)"></i>ring</span>
+        <span><i style="background:var(--pinky)"></i>pinky</span>
+        <span>➜ white arrow = where your fingers point</span>
+        <span>◉ pink arrow = where your palm faces</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="card">
+        <p class="label">I think you're doing…</p>
+        <div class="bigresult">
+          <div class="bigemoji" id="bigEmoji">👀</div>
+          <div>
+            <div class="bigname" id="bigName">Waiting for a hand</div>
+            <div class="why" id="bigWhy">Start the camera and raise your hand.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="progress"><p class="label" style="margin:0">Gestures to discover</p><span><b id="foundCount">0</b> / <span id="totalCount">10</span></span></div>
+        <div class="gallery" id="gallery"></div>
+        <p class="label" style="margin:14px 0 6px">Bonus</p>
+        <div class="gallery bonus" id="bonus"></div>
+      </div>
+
+      <div class="card">
+        <p class="label">What the model sees (live)</p>
+        <div class="tele">
+          <span class="k">hands</span><span id="tHands">0</span>
+          <span class="k">which hand</span><span id="tSide">–</span>
+          <span class="k">confidence</span><span id="tConf">–</span>
+          <span class="k">straight fingers</span><span><div class="fingers" id="tFingers"></div></span>
+          <span class="k">fingers point</span><span id="tDir">–</span>
+          <span class="k">palm faces</span><span id="tPalm">–</span>
+          <span class="k">finger spread</span><span id="tSpread">–</span>
+          <span class="k">wrist (x, y)</span><span id="tWrist">–</span>
+        </div>
+        <div class="settings">
+          <button class="ghost" id="flipBtn" title="If palm vs. back of hand looks swapped, press this">Palm/back looks swapped? Fix it</button>
+          <button class="ghost" id="resetBtn">Reset discoveries</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="explain">
+    <h2>So what is MediaPipe?</h2>
+    <p>MediaPipe is an open‑source framework from Google for running ready‑made ML "solutions" (hands, faces, body pose, objects…) in real time on phones, laptops and in the browser. The <b>Hand Landmarker</b> used here is a small pipeline of two neural networks. The steps light up as they run on your video:</p>
+    <div class="pipeline">
+      <div class="step" id="s1"><div class="num">01</div><h3>Camera frame</h3><p>Each video frame from your webcam is handed to MediaPipe, around 30 times a second.</p></div>
+      <div class="step" id="s2"><div class="num">02</div><h3>Palm detector</h3><p>A first network scans the whole image and draws a box around any palm. Palms are easier to find than whole hands, because they're rigid and square‑ish.</p></div>
+      <div class="step" id="s3"><div class="num">03</div><h3>21 landmarks</h3><p>A second network looks only inside that box and predicts 21 knuckle and fingertip points in 3D (x, y and depth), plus whether it's a left or right hand.</p></div>
+      <div class="step" id="s4"><div class="num">04</div><h3>Our geometry</h3><p>MediaPipe stops there. This page's own code measures the points: which fingers are straight, where they point, which way the palm faces, and whether it's moving.</p></div>
+      <div class="step" id="s5"><div class="num">05</div><h3>Gesture!</h3><p>Simple rules turn those measurements into an emoji. Plain if/else, no extra AI.</p></div>
+    </div>
+
+    <h2 style="margin-top:30px;font-size:22px">The rules this page uses</h2>
+    <p style="color:var(--muted);margin:0">Once you have 21 reliable points, recognizing a gesture is mostly vectors and angles:</p>
+    <div class="rules" id="rules"></div>
+  </section>
+
+  <footer>
+    Built with <a href="https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker" target="_blank" rel="noopener">MediaPipe Hand Landmarker</a> (@mediapipe/tasks-vision). Tip: good light and a plain background help a lot.
+  </footer>
+</div>
+
+<script type="module">
+import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+// ---------- Gesture catalogue ----------
+const MAIN = [
+  { k:"vulcan",   e:"🖖", n:"Vulcan salute",        rule:"<b>All 4 fingers straight</b>, index+middle together, ring+pinky together, with a <b>big gap between middle and ring</b>." },
+  { k:"right",    e:"🫱", n:"Rightwards hand",      rule:"Open hand, <b>fingers point right</b>, palm standing on its edge (thumb on top), like offering a handshake." },
+  { k:"left",     e:"🫲", n:"Leftwards hand",       rule:"Open hand, <b>fingers point left</b>, palm on its edge." },
+  { k:"wave",     e:"👋", n:"Waving",               rule:"Open hand, fingers up, and the hand <b>swings left↔right at least twice</b> in about a second (tracked over time)." },
+  { k:"palmdown", e:"🫳", n:"Palm down",            rule:"Open hand held flat, <b>palm normal points down</b> to the floor." },
+  { k:"palmup",   e:"🫴", n:"Palm up",              rule:"Open hand held flat, <b>palm normal points up</b>, like holding something out." },
+  { k:"pushleft", e:"🫷", n:"Pushing left",         rule:"Fingers up, but the <b>palm faces left</b> on screen, like pushing something sideways." },
+  { k:"raised",   e:"✋", n:"Raised hand",          rule:"Fingers up, <b>palm faces the camera</b>, fingers <b>close together</b>." },
+  { k:"splayed",  e:"🖐️", n:"Fingers splayed",      rule:"Fingers up, palm faces the camera, thumb out and <b>fingers spread wide</b> (big angle between index and pinky)." },
+  { k:"back",     e:"🤚", n:"Back of hand",         rule:"Fingers up, but the palm faces <b>away</b>: you're showing the back of your hand." },
+];
+const BONUS = [
+  { k:"pushright", e:"🫸", n:"Push right", rule:"Fingers up, palm faces right on screen." },
+  { k:"fist",   e:"✊", n:"Fist",      rule:"No fingers straight." },
+  { k:"thumbsup", e:"👍", n:"Thumbs up", rule:"Only the thumb is straight and it points up." },
+  { k:"thumbsdown", e:"👎", n:"Thumbs down", rule:"Only the thumb is straight and it points down." },
+  { k:"point",  e:"☝️", n:"Pointing",  rule:"Only the index finger is straight." },
+  { k:"peace",  e:"✌️", n:"Peace",     rule:"Index and middle straight, the rest folded." },
+  { k:"rock",   e:"🤘", n:"Rock on",   rule:"Index and pinky straight, middle and ring folded." },
+  { k:"ok",     e:"👌", n:"OK",        rule:"Thumb tip touching index tip, other fingers straight." },
+];
+const ALL = Object.fromEntries([...MAIN, ...BONUS].map(g => [g.k, g]));
+
+// ---------- UI build ----------
+const $ = id => document.getElementById(id);
+function buildGallery(el, list){
+  el.innerHTML = list.map(g => `<div class="g" data-k="${g.k}" title="${g.n}"><div class="e">${g.e}</div><div class="n">${g.n}</div></div>`).join("");
+}
+buildGallery($("gallery"), MAIN);
+buildGallery($("bonus"), BONUS);
+$("totalCount").textContent = MAIN.length;
+$("rules").innerHTML = [...MAIN, ...BONUS.slice(0,1)].map(g => `<div class="rule"><div class="e">${g.e}</div><p><b>${g.n}.</b> ${g.rule}</p></div>`).join("");
+const fingerColors = ["--thumb","--index","--middle","--ring","--pinky"];
+$("tFingers").innerHTML = ["T","I","M","R","P"].map((l,i)=>`<div class="f" style="background:var(${fingerColors[i]})">${l}</div>`).join("");
+
+let found = new Set();
+try { found = new Set(JSON.parse(localStorage.getItem("mp-found") || "[]")); } catch(e){}
+function refreshFound(){
+  document.querySelectorAll(".g").forEach(el => el.classList.toggle("found", found.has(el.dataset.k)));
+  $("foundCount").textContent = MAIN.filter(g => found.has(g.k)).length;
+}
+refreshFound();
+$("resetBtn").onclick = () => { found.clear(); try{localStorage.removeItem("mp-found")}catch(e){}; refreshFound(); };
+
+let flipPalm = false;
+try { flipPalm = localStorage.getItem("mp-flip") === "1"; } catch(e){}
+$("flipBtn").onclick = () => { flipPalm = !flipPalm; try{localStorage.setItem("mp-flip", flipPalm?"1":"0")}catch(e){};
+  $("flipBtn").textContent = flipPalm ? "Palm/back fix: ON (press to undo)" : "Palm/back looks swapped? Fix it"; };
+if (flipPalm) $("flipBtn").textContent = "Palm/back fix: ON (press to undo)";
+
+// ---------- Vector helpers ----------
+const sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y,z:a.z-b.z});
+const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
+const cross=(a,b)=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});
+const len=a=>Math.hypot(a.x,a.y,a.z);
+const norm=a=>{const l=len(a)||1;return{x:a.x/l,y:a.y/l,z:a.z/l}};
+const dist=(a,b)=>len(sub(a,b));
+const angleDeg=(a,b)=>Math.acos(Math.max(-1,Math.min(1,dot(norm(a),norm(b)))))*180/Math.PI;
+
+// Dominant axis of a direction in *screen* space (x right, y down, z away from camera)
+function axisName(v){
+  const ax=Math.abs(v.x), ay=Math.abs(v.y), az=Math.abs(v.z);
+  if (ay>=ax && ay>=az) return v.y<0 ? "up" : "down";
+  if (ax>=ay && ax>=az) return v.x>0 ? "right" : "left";
+  return v.z<0 ? "camera" : "away";
+}
+
+// ---------- Hand analysis ----------
+const FINGERS = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16],[17,18,19,20]];
+function analyze(world, lm, handLabel){
+  const W = world;
+  // Which fingers are straight?
+  const ext = FINGERS.map((f,i)=>{
+    const [a,b,c,d] = f;
+    const straight = dot(norm(sub(W[b],W[a])), norm(sub(W[d],W[c])));
+    if (i===0){
+      return straight>0.5 && dist(W[4],W[9]) > dist(W[2],W[9])*1.1 && dist(W[4],W[17]) > dist(W[3],W[17]);
+    }
+    return straight>0.55 && dist(W[0],W[d]) > dist(W[0],W[b])*1.15;
+  });
+  const nExt = ext.filter(Boolean).length;
+  const four = ext[1]&&ext[2]&&ext[3]&&ext[4];
+
+  // Finger direction (wrist -> middle knuckle), converted to mirrored screen space
+  const fdRaw = norm(sub(W[9],W[0]));
+  const fd = {x:-fdRaw.x, y:fdRaw.y, z:fdRaw.z};
+
+  // Palm normal: cross(index knuckle - wrist, pinky knuckle - wrist).
+  // For the user's real RIGHT hand on an un-mirrored frame this points out of the palm.
+  // MediaPipe labels assume a mirrored image, so on raw webcam frames "Left" == user's right hand.
+  const isUserRight = handLabel === "Left";
+  let n = norm(cross(sub(W[5],W[0]), sub(W[17],W[0])));
+  let s = isUserRight ? 1 : -1; if (flipPalm) s = -s;
+  n = {x:-n.x*s, y:n.y*s, z:n.z*s}; // to screen space (mirror x)
+
+  const fingerAxis = axisName(fd);
+  const palmAxis = axisName(n);
+
+  // Spread: angle between index and pinky direction
+  const spread = angleDeg(sub(W[8],W[5]), sub(W[20],W[17]));
+  const palmSize = dist(W[0],W[9]);
+  const gIM = dist(W[8],W[12]), gMR = dist(W[12],W[16]), gRP = dist(W[16],W[20]);
+  const vulcan = four && gMR > 1.7*Math.max(gIM,gRP) && gMR/palmSize > 0.3;
+  const okTouch = dist(W[4],W[8]) < palmSize*0.28;
+
+  return { ext, nExt, four, fd, n, fingerAxis, palmAxis, spread, vulcan, okTouch, isUserRight,
+           wrist: {x:1-lm[0].x, y:lm[0].y} };
+}
+
+function classify(a){
+  const why = [];
+  if (a.okTouch && a.ext[2] && a.ext[3] && a.ext[4]) return {k:"ok", why:["thumb tip touches index tip","middle, ring, pinky straight"]};
+  if (a.four){
+    why.push("4 fingers straight");
+    if (a.fingerAxis==="up"){
+      why.push("fingers point up");
+      if (a.palmAxis==="camera"){
+        why.push("palm faces camera");
+        if (a.vulcan) return {k:"vulcan", why:[...why,"gap between middle & ring"]};
+        if (a.spread>28 && a.ext[0]) return {k:"splayed", why:[...why,`spread ${a.spread.toFixed(0)}°`]};
+        return {k:"raised", why:[...why,"fingers together"]};
+      }
+      if (a.palmAxis==="away"){ if (a.vulcan) return {k:"vulcan", why:[...why,"gap between middle & ring"]}; return {k:"back", why:[...why,"palm faces away"]}; }
+      if (a.palmAxis==="left")  return {k:"pushleft",  why:[...why,"palm faces left"]};
+      if (a.palmAxis==="right") return {k:"pushright", why:[...why,"palm faces right"]};
+      return {k:"raised", why};
+    }
+    if (a.palmAxis==="up")   return {k:"palmup",   why:[...why,"palm faces up"]};
+    if (a.palmAxis==="down") return {k:"palmdown", why:[...why,"palm faces down"]};
+    if (a.fingerAxis==="right") return {k:"right", why:[...why,"fingers point right","palm on its edge"]};
+    if (a.fingerAxis==="left")  return {k:"left",  why:[...why,"fingers point left","palm on its edge"]};
+    return {k:null, why:[...why,`fingers point ${a.fingerAxis}`]};
+  }
+  const [t,i,m,r,p] = a.ext;
+  if (a.nExt===0) return {k:"fist", why:["no straight fingers"]};
+  if (t && !i && !m && !r && !p){
+    // thumb direction
+    if (a.fingerAxis!=="up"){} // ignore
+    return null; // decided below with thumb vector
+  }
+  if (i && !m && !r && !p) return {k:"point", why:["only index straight"]};
+  if (i && m && !r && !p) return {k:"peace", why:["index + middle straight"]};
+  if (i && !m && !r && p) return {k:"rock", why:["index + pinky straight"]};
+  return {k:null, why:[`${a.nExt} fingers straight`]};
+}
+
+// ---------- Wave detection (over time) ----------
+const waveHist = [];
+let waveUntil = 0;
+function updateWave(a, now){
+  const eligible = a.four && (a.fingerAxis==="up");
+  if (!eligible){ waveHist.length = 0; return false; }
+  const ang = Math.atan2(a.fd.x, -a.fd.y)*180/Math.PI; // tilt left/right
+  waveHist.push({t:now, ang, x:a.wrist.x});
+  while (waveHist.length && now - waveHist[0].t > 1400) waveHist.shift();
+  // count direction reversals with hysteresis, on tilt angle and wrist x
+  const rev = (key, thr) => {
+    let count=0, dir=0, ext=waveHist[0]?.[key];
+    for (const h of waveHist){
+      const d = h[key]-ext;
+      if (dir>=0 && d < -thr){ if (dir===1) count++; dir=-1; ext=h[key]; }
+      else if (dir<=0 && d > thr){ if (dir===-1) count++; dir=1; ext=h[key]; }
+      else if ((dir===1 && h[key]>ext) || (dir===-1 && h[key]<ext) || dir===0) { if(dir!==0) ext=h[key]; }
+    }
+    return count;
+  };
+  if (rev("ang",12)>=2 || rev("x",0.035)>=2){ waveUntil = now + 900; }
+  return now < waveUntil;
+}
+
+// ---------- Smoothing ----------
+const histories = [[],[]];
+function smooth(idx, k){
+  const h = histories[idx]; h.push(k); if (h.length>8) h.shift();
+  const counts = {}; h.forEach(x=>{ if(x) counts[x]=(counts[x]||0)+1; });
+  let best=null, bc=0; for (const [kk,c] of Object.entries(counts)) if (c>bc){best=kk;bc=c;}
+  return bc>=4 ? best : null;
+}
+
+// ---------- Drawing ----------
+const CONN = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const COLORS = fingerColors.map(css);
+function fingerOf(i){ return i===0?-1: Math.floor((i-1)/4); }
+
+const canvas = $("canvas"), ctx = canvas.getContext("2d");
+const video = $("video");
+function drawHand(lm, a, label){
+  const w=canvas.width, h=canvas.height;
+  const P = i => ({x:(1-lm[i].x)*w, y:lm[i].y*h});
+  ctx.lineWidth = 3; ctx.lineCap="round";
+  for (const [s,e] of CONN){
+    const f = fingerOf(e); ctx.strokeStyle = f<0? "#ffffffaa" : COLORS[f]+"cc";
+    if (s===0 && e===17 || s===5&&e===9 || s===9&&e===13 || s===13&&e===17 || s===0&&e===5 || s===0&&e===1) ctx.strokeStyle="#ffffff88";
+    const A=P(s),B=P(e); ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+  }
+  for (let i=0;i<21;i++){
+    const p=P(i), f=fingerOf(i), tip=[4,8,12,16,20].includes(i);
+    ctx.beginPath(); ctx.arc(p.x,p.y, tip?7:4.5, 0, Math.PI*2);
+    ctx.fillStyle = f<0 ? "#fff" : COLORS[f]; ctx.fill();
+    if (tip){ ctx.strokeStyle="#000"; ctx.lineWidth=1.5; ctx.stroke(); ctx.lineWidth=3; }
+  }
+  // palm centre
+  const c = {x:(P(0).x+P(5).x+P(17).x+P(9).x)/4, y:(P(0).y+P(5).y+P(17).y+P(9).y)/4};
+  const scale = Math.hypot(P(0).x-P(9).x, P(0).y-P(9).y);
+  arrow(c, {x:c.x+a.fd.x*scale*0.9, y:c.y+a.fd.y*scale*0.9}, "#ffffff");
+  // palm normal: draw projected component, plus a ring sized by how much it faces the camera
+  const nz = a.n.z;
+  arrow(c, {x:c.x+a.n.x*scale*0.8, y:c.y+a.n.y*scale*0.8}, "#ff7ad9");
+  ctx.beginPath(); ctx.arc(c.x,c.y, 6+Math.abs(nz)*12, 0, Math.PI*2);
+  ctx.strokeStyle = nz<0 ? "#ff7ad9" : "#ff7ad966"; ctx.lineWidth = 2; ctx.setLineDash(nz<0?[]:[4,4]); ctx.stroke(); ctx.setLineDash([]);
+  // label
+  const top = P(12);
+  ctx.font = "600 14px 'Space Grotesk', sans-serif"; ctx.fillStyle="#000a";
+  const tw = ctx.measureText(label).width;
+  ctx.fillRect(P(0).x - tw/2 - 8, P(0).y + 12, tw+16, 24);
+  ctx.fillStyle="#fff"; ctx.textAlign="center"; ctx.fillText(label, P(0).x, P(0).y+29); ctx.textAlign="left";
+}
+function arrow(a,b,color){
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  const ang=Math.atan2(b.y-a.y,b.x-a.x), s=10;
+  ctx.beginPath(); ctx.moveTo(b.x,b.y);
+  ctx.lineTo(b.x-s*Math.cos(ang-0.45), b.y-s*Math.sin(ang-0.45));
+  ctx.lineTo(b.x-s*Math.cos(ang+0.45), b.y-s*Math.sin(ang+0.45)); ctx.closePath(); ctx.fill();
+}
+
+// ---------- Main loop ----------
+let landmarker, lastVideoTime=-1, lastShown=null, frames=0, fpsT=performance.now();
+async function init(){
+  $("status").textContent = "Loading MediaPipe model…";
+  const fileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  const opts = (delegate) => ({
+    baseOptions:{ modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", delegate },
+    runningMode:"VIDEO", numHands:2, minHandDetectionConfidence:0.6, minTrackingConfidence:0.5
+  });
+  try { landmarker = await HandLandmarker.createFromOptions(fileset, opts("GPU")); }
+  catch(e){ landmarker = await HandLandmarker.createFromOptions(fileset, opts("CPU")); }
+}
+
+$("startBtn").onclick = async () => {
+  $("startBtn").disabled = true;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video:{ width:{ideal:960}, height:{ideal:720}, facingMode:"user" }, audio:false });
+    video.srcObject = stream; await video.play();
+    await init();
+    $("startOverlay").style.display="none";
+    requestAnimationFrame(loop);
+  } catch(err){
+    console.error(err);
+    $("startBtn").disabled = false;
+    $("status").textContent = (err && err.name==="NotAllowedError")
+      ? "Camera permission was blocked. Allow it in the address bar and try again."
+      : "Couldn't start: " + (err?.message || err) + ". Open this page in Chrome/Edge over https or from a local file.";
+  }
+};
+
+function pulseSteps(hasHand){
+  ["s1","s2","s3","s4","s5"].forEach((id,i)=> $(id).classList.toggle("active", i<2 || hasHand));
+}
+
+function loop(){
+  if (video.videoWidth && (canvas.width!==video.videoWidth)){ canvas.width=video.videoWidth; canvas.height=video.videoHeight; }
+  const now = performance.now();
+  if (video.currentTime !== lastVideoTime){
+    lastVideoTime = video.currentTime;
+    const res = landmarker.detectForVideo(video, now);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const hands = res.landmarks?.length || 0;
+    $("tHands").textContent = hands;
+    pulseSteps(hands>0);
+    const shown = [];
+    for (let h=0; h<hands; h++){
+      const lm = res.landmarks[h], world = res.worldLandmarks[h];
+      const cat = res.handedness[h][0];
+      const a = analyze(world, lm, cat.categoryName);
+      let c = classify(a);
+      if (c===null){ // thumb-only case
+        const td = norm(sub(world[4], world[2]));
+        c = td.y < -0.5 ? {k:"thumbsup", why:["only thumb straight","thumb points up"]}
+          : td.y > 0.5 ? {k:"thumbsdown", why:["only thumb straight","thumb points down"]}
+          : {k:null, why:["only thumb straight"]};
+      }
+      if (updateWave(a, now)) c = {k:"wave", why:["open hand","swinging left ↔ right"]};
+      const k = smooth(h, c.k);
+      const side = a.isUserRight ? "Right hand" : "Left hand";
+      drawHand(lm, a, `${side}${k? "  "+ALL[k].e : ""}`);
+      shown.push({k, why:c.why, a, side, score:cat.score});
+    }
+    for (let h=hands; h<2; h++) histories[h].length=0;
+    updateUI(shown);
+    frames++;
+    if (now-fpsT>1000){ $("fps").textContent = `${frames} fps · runs on your device`; frames=0; fpsT=now; }
+  }
+  requestAnimationFrame(loop);
+}
+
+function updateUI(shown){
+  const live = new Set(shown.map(s=>s.k).filter(Boolean));
+  document.querySelectorAll(".g").forEach(el => el.classList.toggle("live", live.has(el.dataset.k)));
+  let changed=false;
+  live.forEach(k => { if(!found.has(k)){ found.add(k); changed=true; } });
+  if (changed){ try{localStorage.setItem("mp-found", JSON.stringify([...found]))}catch(e){}; refreshFound(); }
+
+  const combo = $("combo");
+  if (live.has("right") && live.has("left")){ combo.textContent="🫱🫲  Both hands! Handshake 🤝"; combo.style.display="block"; }
+  else if (shown.length===2 && shown[0].k && shown[0].k===shown[1].k){ combo.textContent=`Both hands: ${ALL[shown[0].k].e}${ALL[shown[0].k].e}`; combo.style.display="block"; }
+  else combo.style.display="none";
+
+  const main = shown[0];
+  const big = $("bigEmoji");
+  if (!main){
+    big.textContent="👀"; $("bigName").textContent="No hand in view"; $("bigWhy").textContent="Raise your hand in front of the camera.";
+    ["tSide","tConf","tDir","tPalm","tSpread","tWrist"].forEach(id=>$(id).textContent="–");
+    document.querySelectorAll(".f").forEach(f=>f.classList.remove("on"));
+    lastShown=null; return;
+  }
+  const g = main.k ? ALL[main.k] : null;
+  if (main.k !== lastShown){
+    big.textContent = g ? g.e : "🤔";
+    big.classList.add("pop"); setTimeout(()=>big.classList.remove("pop"),150);
+    lastShown = main.k;
+  }
+  $("bigName").textContent = g ? g.n : "Hand found, gesture unclear";
+  $("bigWhy").innerHTML = `<div class="chips">${main.why.map(w=>`<span class="chip">${w}</span>`).join("")}</div>`;
+  const a = main.a;
+  $("tSide").textContent = main.side;
+  $("tConf").textContent = (main.score*100).toFixed(0)+"%";
+  document.querySelectorAll(".f").forEach((f,i)=>f.classList.toggle("on", a.ext[i]));
+  $("tDir").textContent = `${a.fingerAxis}  (${a.fd.x.toFixed(2)}, ${a.fd.y.toFixed(2)}, ${a.fd.z.toFixed(2)})`;
+  $("tPalm").textContent = `${a.palmAxis}  (${a.n.x.toFixed(2)}, ${a.n.y.toFixed(2)}, ${a.n.z.toFixed(2)})`;
+  $("tSpread").textContent = `${a.spread.toFixed(0)}° index↔pinky`;
+  $("tWrist").textContent = `${a.wrist.x.toFixed(2)}, ${a.wrist.y.toFixed(2)}`;
+}
+</script>
+</body>
+</html>
