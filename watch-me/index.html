@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Watch me</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1d1640; --sky:#7cc8f5; --chip:#ffe066; --chip-ink:#1d1640; --btn:#3d2c8d; --btn-ink:#ffffff;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#f3efff; --sky:#121638; --chip:#ffe066; --chip-ink:#1d1640; --btn:#ffe066; --btn-ink:#1d1640;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#f3efff; --sky:#121638; --chip:#ffe066; --chip-ink:#1d1640; --btn:#ffe066; --btn-ink:#1d1640;
+  color-scheme:dark;
+}
+html{height:100%; scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0; height:100%; overflow:hidden; background:var(--sky); color:var(--ink);
+  font-family:"Baloo 2", ui-rounded, "Trebuchet MS", system-ui, sans-serif}
+canvas{position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:manipulation}
+.hud{position:fixed; top:calc(env(safe-area-inset-top,0px) + 12px); left:16px; right:16px;
+  display:flex; justify-content:space-between; align-items:flex-start; gap:12px; pointer-events:none}
+h1{margin:0; font-size:clamp(1.5rem,4.2vw,2.6rem); font-weight:800; line-height:1; letter-spacing:-0.01em}
+.count{display:inline-block; margin-top:8px; background:var(--chip); color:var(--chip-ink);
+  border-radius:999px; padding:1px 12px; font-weight:800; font-size:1rem}
+.btn{pointer-events:auto; cursor:pointer; position:relative; background:var(--btn); color:var(--btn-ink);
+  border-radius:999px; padding:8px 18px; font-weight:800; font-size:1rem; white-space:nowrap}
+.btn:focus-within{outline:3px solid var(--chip); outline-offset:3px}
+.btn input{position:absolute; opacity:0; width:1px; height:1px; pointer-events:none}
+.btns{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px}
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="People walk along a street. A phone creature with arms and legs grabs them and carries them down to watch you dance on a stage."></canvas>
+<div class="hud">
+  <div>
+    <h1>Everybody, watch me</h1>
+    <span class="count" id="count" aria-live="polite">0 watching</span>
+  </div>
+  <div class="btns">
+    <label class="btn">Add your photo<input type="file" id="file" accept="image/*"></label>
+    <label class="btn">Add grabber photo<input type="file" id="file2" accept="image/*"></label>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+const fileIn=document.getElementById('file'), fileIn2=document.getElementById('file2'), countEl=document.getElementById('count');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const motion=reduce?0.5:1;
+
+let W,H,S,sideTop,sideBot,meX,meY,meR;
+let seats=[], seatOwner=[];
+const people=[];
+let meImg=null, grabImg=null, now=0;
+
+const SH=['#ff6b6b','#4ecdc4','#ffa94d','#845ef7','#51cf66','#339af0','#f06595','#fcc419'];
+const PA=['#364fc7','#495057','#5c3d2e','#2b8a3e','#1d1640'];
+const SK=['#f8d5b8','#e0ac69','#c68642','#8d5524','#ffdbac','#5c3a21'];
+const HA=['#2b1d0e','#5a3825','#d9a441','#1a1a1a','#a23b2a','#e9e1d6'];
+
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.random()*a.length|0];
+const lerp=(a,b,k)=>a+(b-a)*k;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+
+function isDark(){
+  const t=document.documentElement.dataset.theme;
+  if(t==='dark')return true; if(t==='light')return false;
+  return matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function palette(){
+  return isDark()?{
+    skyTop:'#121638',skyBot:'#2a2f6b',walk:'#5a566e',curb:'#47435a',tile:'rgba(255,255,255,.06)',
+    lawn:'#2e5a3d',lawn2:'#2a5238',stage:'#f7e48a',glow:'rgba(255,230,120,.28)',
+    gBody:'#6b55e0',screen:'#ffe066',limb:'#f3efff',glove:'#ffffff',eye:'#1d1640',outline:'#1d1640'
+  }:{
+    skyTop:'#7cc8f5',skyBot:'#c9ecff',walk:'#efe3c8',curb:'#d4c19a',tile:'rgba(0,0,0,.06)',
+    lawn:'#8fd06f',lawn2:'#84c664',stage:'#fff6c2',glow:'rgba(255,240,150,.55)',
+    gBody:'#3d2c8d',screen:'#ffe066',limb:'#1d1640',glove:'#ffffff',eye:'#1d1640',outline:'#1d1640'
+  };
+}
+
+function laneY(l){return sideTop+(sideBot-sideTop)*(l?0.9:0.55);}
+function homePos(){return {x:Math.min(W-S*2.5,meX+meR+S*4.5),y:meY+meR+S*1.6};}
+function upY(){return sideBot+S*4.4;}
+
+function resize(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  W=cv.clientWidth; H=cv.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  S=clamp(Math.min(W,H)/26,13,28);
+  sideTop=H*0.2; sideBot=H*0.34;
+  meX=W/2; meY=H*0.56; meR=S*2.4;
+  // seats: theater rows in front of the stage, center outward
+  seats=[];
+  const spacing=S*2.3;
+  let row=0;
+  for(let y=meY+meR+S*5.2; y<=H-S*0.8; y+=S*2.7,row++){
+    const xs=[];
+    const off=(row%2)*spacing/2;
+    for(let x=meX+off; x<W-S*1.5; x+=spacing) xs.push(x);
+    for(let x=meX+off-spacing; x>S*1.5; x-=spacing) xs.push(x);
+    xs.sort((a,b)=>Math.abs(a-meX)-Math.abs(b-meX));
+    xs.forEach(x=>seats.push({x,y}));
+  }
+  if(seats.length<10){ // short screens: a wing on the left of the stage
+    const y=meY+meR+S*1.6;
+    for(let x=meX-meR-S*3.5; x>S*1.5; x-=spacing) seats.push({x,y});
+  }
+  seatOwner=new Array(seats.length).fill(null);
+  for(const p of people){
+    if(p.seat!=null){
+      if(p.seat>=seats.length){p.seat=null;p.state='leaving';p.dir=p.x<W/2?-1:1;}
+      else seatOwner[p.seat]=p;
+    }
+  }
+  const h=homePos(); if(!g.started){g.x=h.x;g.y=h.y;g.started=true;}
+}
+
+/* ---------- people ---------- */
+function newWalker(onscreen){
+  const dir=Math.random()<.5?1:-1, lane=Math.random()<.5?0:1;
+  const p={state:'walking',dir,lane,speed:rand(1.5,2.6),phase:rand(0,6),
+    shirt:pick(SH),pants:pick(PA),skin:pick(SK),hair:pick(HA),seat:null};
+  p.x=onscreen?rand(S*2,W-S*2):(dir>0?-S*2:W+S*2);
+  p.y=laneY(lane);
+  people.push(p);
+}
+
+function seatPerson(p){
+  let i=seatOwner.findIndex(o=>o===null);
+  if(i<0){
+    let oldest=null;
+    for(const o of seatOwner) if(o&&o.state==='seated'&&(!oldest||o.seatedAt<oldest.seatedAt)) oldest=o;
+    if(!oldest){p.state='leaving';p.dir=1;return;}
+    i=oldest.seat; oldest.seat=null; oldest.state='leaving'; oldest.dir=oldest.x<W/2?-1:1;
+  }
+  seatOwner[i]=p; p.seat=i; p.state='hop'; p.ph=0; p.fx=p.x; p.fy=p.y;
+}
+
+/* ---------- the grabber ---------- */
+const g={x:0,y:0,state:'home',timer:1.2,carry:[],arm:null,queue:[],qi:0,moving:false,face:1,started:false};
+
+function shoulder(side){return {x:g.x+side*S*1.05,y:g.y-S*1.2-S*3.4+S*1.3};}
+function slot(i,n){const top=g.y-S*4.6;return {x:g.x+(i-(n-1)/2)*S*1.5,y:top-S*0.15-(i%2)*S*0.35};}
+
+function moveTo(tx,ty,dt){
+  const dx=tx-g.x, dy=ty-g.y, d=Math.hypot(dx,dy), step=S*7*dt*motion;
+  if(d<=step){g.x=tx;g.y=ty;g.moving=false;return true;}
+  g.x+=dx/d*step; g.y+=dy/d*step; g.moving=true;
+  if(Math.abs(dx)>1) g.face=Math.sign(dx);
+  return false;
+}
+
+function pickTargets(){
+  const c=people.filter(p=>p.state==='walking'&&p.x>S*2&&p.x<W-S*2&&Math.abs(p.x-g.x)<Math.max(W*0.45,S*12));
+  c.sort((a,b)=>Math.abs(a.x-g.x)-Math.abs(b.x-g.x));
+  return c.slice(0,1+(Math.random()*3|0));
+}
+
+function updateGrabber(dt){
+  switch(g.state){
+    case 'home':
+      g.moving=false; g.timer-=dt;
+      if(g.timer<=0){
+        const vis=people.filter(p=>p.state==='walking'&&p.x>S*3&&p.x<W-S*3);
+        if(vis.length){const p=pick(vis);g.tx=clamp(p.x+p.dir*p.speed*S*1.2,S*2,W-S*2);g.state='up';}
+        else g.timer=0.5;
+      }
+      break;
+    case 'up':
+      if(moveTo(g.tx,upY(),dt)){g.state='grab';g.queue=pickTargets();g.qi=0;g.arm=null;}
+      break;
+    case 'grab':{
+      g.moving=false;
+      if(g.qi>=g.queue.length){g.arm=null;g.state=g.carry.length?'down':'home';g.timer=0.6;break;}
+      const p=g.queue[g.qi];
+      if(!g.arm){
+        if(p.state!=='walking'||p.x<-S||p.x>W+S){g.qi++;break;}
+        g.arm={side:p.x<g.x?-1:1,p,ph:0,holding:false};
+      }
+      const a=g.arm, sh=shoulder(a.side);
+      a.ph+=dt/(0.32/motion);
+      if(!a.holding){
+        const k=ease(Math.min(a.ph,1));
+        a.hx=lerp(sh.x,p.x,k); a.hy=lerp(sh.y,p.y-S*2.2,k);
+        if(a.ph>=1){a.holding=true;a.ph=0;p.state='grabbed';a.gx=p.x;a.gy=p.y-S*2.2;}
+      }else{
+        const s=slot(g.carry.length,g.carry.length+1), k=ease(Math.min(a.ph,1));
+        a.hx=lerp(a.gx,s.x,k); a.hy=lerp(a.gy,s.y-S*1.1,k)-Math.sin(Math.PI*k)*S*1.5;
+        p.x=a.hx; p.y=a.hy+S*1.1;
+        if(a.ph>=1){p.state='carried';g.carry.push(p);g.arm=null;g.qi++;}
+      }
+      break;}
+    case 'down':{
+      const h=homePos();
+      if(moveTo(h.x,h.y,dt)){g.state='drop';g.timer=0.2;}
+      break;}
+    case 'drop':
+      g.moving=false; g.timer-=dt;
+      if(g.timer<=0){
+        if(g.carry.length){seatPerson(g.carry.shift());g.timer=0.2;}
+        else{g.state='home';g.timer=rand(0.8,1.8);}
+      }
+      break;
+  }
+  g.carry.forEach((p,i)=>{const s=slot(i,g.carry.length);p.x=s.x;p.y=s.y;});
+}
+
+/* ---------- update ---------- */
+let spawnT=0;
+function update(dt){
+  now+=dt;
+  for(const p of people){
+    if(p.state==='walking'){p.x+=p.dir*p.speed*S*dt*motion;p.y=laneY(p.lane);p.phase+=dt*p.speed*3.2*motion;}
+    else if(p.state==='leaving'){p.x+=p.dir*S*3.2*dt*motion;p.phase+=dt*9*motion;}
+    else if(p.state==='hop'){
+      p.ph+=dt/(0.7/motion);
+      const k=Math.min(p.ph,1), s=seats[p.seat], e=ease(k);
+      p.x=lerp(p.fx,s.x,e); p.y=lerp(p.fy,s.y,e)-Math.sin(Math.PI*k)*S*4;
+      if(k>=1){p.state='seated';p.seatedAt=now;}
+    }
+    else if(p.state==='seated'){const s=seats[p.seat];p.x=s.x;p.y=s.y;}
+    else p.phase+=dt*14*motion;
+  }
+  for(let i=people.length-1;i>=0;i--){
+    const p=people[i];
+    if((p.state==='walking'||p.state==='leaving')&&(p.x<-S*4||p.x>W+S*4)) people.splice(i,1);
+  }
+  const walking=people.filter(p=>p.state==='walking').length;
+  const target=Math.max(4,Math.floor(W/(S*6)));
+  spawnT-=dt;
+  if(walking<target&&spawnT<=0){newWalker(false);spawnT=rand(0.3,1.2);}
+  updateGrabber(dt);
+  const n=people.filter(p=>p.state==='seated'||p.state==='hop').length;
+  const txt=n+' watching';
+  if(countEl.textContent!==txt) countEl.textContent=txt;
+}
+
+/* ---------- drawing ---------- */
+function rr(x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
+
+function drawPerson(p,sc,sw,armsUp,lx,ly,pal){
+  const s=S*sc;
+  ctx.save(); ctx.translate(p.x,p.y); ctx.lineCap='round';
+  const hipY=-s*1.0, shY=-s*2.0;
+  ctx.strokeStyle=p.pants; ctx.lineWidth=s*0.32;
+  for(const k of[-1,1]){const a=sw*k;ctx.beginPath();ctx.moveTo(k*s*0.18,hipY);
+    ctx.lineTo(k*s*0.18+Math.sin(a)*s,hipY+Math.cos(a)*s);ctx.stroke();}
+  ctx.strokeStyle=p.skin; ctx.lineWidth=s*0.24;
+  for(const k of[-1,1]){ctx.beginPath();ctx.moveTo(k*s*0.42,shY);
+    if(armsUp) ctx.lineTo(k*s*0.8,shY-s*0.9);
+    else{const a=-sw*k*0.8;ctx.lineTo(k*s*0.5+Math.sin(a)*s*0.85,shY+Math.cos(a)*s*0.85);}
+    ctx.stroke();}
+  ctx.fillStyle=p.shirt; rr(-s*0.48,-s*2.2,s*0.96,s*1.35,s*0.4); ctx.fill();
+  ctx.fillStyle=p.skin; ctx.beginPath(); ctx.arc(0,-s*2.75,s*0.55,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=p.hair; ctx.beginPath(); ctx.arc(0,-s*2.85,s*0.56,Math.PI*1.05,Math.PI*1.95); ctx.fill();
+  let ex=lx-p.x, ey=ly-(p.y-s*2.75); const d=Math.hypot(ex,ey)||1; ex/=d; ey/=d;
+  ctx.fillStyle=pal.eye;
+  for(const k of[-1,1]){ctx.beginPath();ctx.arc(k*s*0.2+ex*s*0.09,-s*2.72+ey*s*0.09,s*0.08,0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+}
+
+function personPose(p,pal){
+  const look=[meX,meY];
+  switch(p.state){
+    case 'walking': drawPerson(p,1,Math.sin(p.phase)*0.5,false,p.x+p.dir*100,p.y-S*2.75,pal); break;
+    case 'leaving': drawPerson(p,0.9,Math.sin(p.phase)*0.5,false,p.x+p.dir*100,p.y-S*2.5,pal); break;
+    case 'grabbed':
+    case 'carried': drawPerson(p,0.9,Math.sin(p.phase)*0.7,true,...look,pal); break;
+    case 'hop': drawPerson(p,0.88,0.4,true,...look,pal); break;
+    case 'seated':{
+      const cheer=Math.sin(now*2+p.seatedAt*3)>0.75;
+      const bob=cheer?Math.abs(Math.sin(now*9))*S*0.25:0;
+      const q={...p,y:p.y-bob};
+      drawPerson(q,0.85,0,cheer,...look,pal); break;}
+  }
+}
+
+function drawBackground(pal){
+  let gr=ctx.createLinearGradient(0,0,0,sideTop);
+  gr.addColorStop(0,pal.skyTop); gr.addColorStop(1,pal.skyBot);
+  ctx.fillStyle=gr; ctx.fillRect(0,0,W,sideTop);
+  ctx.fillStyle=pal.walk; ctx.fillRect(0,sideTop,W,sideBot-sideTop);
+  ctx.strokeStyle=pal.tile; ctx.lineWidth=2;
+  for(let x=(-now*0)%(S*4);x<W;x+=S*4){ctx.beginPath();ctx.moveTo(x,sideTop);ctx.lineTo(x,sideBot);ctx.stroke();}
+  ctx.fillStyle=pal.curb; ctx.fillRect(0,sideBot,W,S*0.5);
+  ctx.fillStyle=pal.lawn; ctx.fillRect(0,sideBot+S*0.5,W,H);
+  ctx.fillStyle=pal.lawn2;
+  for(let y=sideBot+S*0.5+S*2;y<H;y+=S*4) ctx.fillRect(0,y,W,S*2);
+}
+
+function drawMe(pal){
+  const t=now*motion;
+  const feetY=meY+meR+S*1.6;
+  // stage + spotlight
+  const gl=ctx.createRadialGradient(meX,meY,meR*0.5,meX,meY,meR*3.4);
+  gl.addColorStop(0,pal.glow); gl.addColorStop(1,'rgba(255,240,150,0)');
+  ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(meX,meY,meR*3.4,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=pal.stage; ctx.beginPath(); ctx.ellipse(meX,feetY+S*0.2,meR*1.9,S*0.9,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=pal.outline; ctx.globalAlpha=.15; ctx.lineWidth=2; ctx.stroke(); ctx.globalAlpha=1;
+
+  const bob=Math.abs(Math.sin(t*4))*S*0.35;
+  const cy=meY-bob;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  // legs: alternate kicks
+  ctx.strokeStyle=pal.limb; ctx.lineWidth=S*0.45;
+  for(const k of[-1,1]){
+    const kick=Math.max(0,Math.sin(t*4+(k>0?Math.PI:0)))*S*0.9;
+    const hx=meX+k*meR*0.35, hy=cy+meR*0.8;
+    const fx=meX+k*(meR*0.55+kick*0.4), fy=feetY-kick;
+    const kx=(hx+fx)/2+k*S*0.5, ky=(hy+fy)/2;
+    ctx.beginPath(); ctx.moveTo(hx,hy); ctx.quadraticCurveTo(kx,ky,fx,fy); ctx.stroke();
+    ctx.fillStyle=pal.limb; ctx.beginPath(); ctx.ellipse(fx+k*S*0.25,fy,S*0.5,S*0.26,0,0,Math.PI*2); ctx.fill();
+  }
+  // arms: waving
+  for(const k of[-1,1]){
+    const sx=meX+k*meR*0.92, sy=cy+meR*0.15;
+    const wave=Math.sin(t*5+(k>0?0:1.4));
+    const ex=sx+k*S*1.3, ey=sy-S*0.4;
+    const hx=ex+k*S*0.6+wave*S*0.5, hy=ey-S*1.3-Math.abs(wave)*S*0.3;
+    ctx.strokeStyle=pal.limb; ctx.lineWidth=S*0.4;
+    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.lineTo(hx,hy); ctx.stroke();
+    ctx.fillStyle=pal.glove; ctx.beginPath(); ctx.arc(hx,hy,S*0.42,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=pal.outline; ctx.lineWidth=S*0.12; ctx.stroke();
+  }
+  // the circle
+  ctx.save(); ctx.beginPath(); ctx.arc(meX,cy,meR,0,Math.PI*2); ctx.clip();
+  if(meImg){ctx.drawImage(meImg,meX-meR,cy-meR,meR*2,meR*2);}
+  else{
+    ctx.fillStyle=pal.screen; ctx.fillRect(meX-meR,cy-meR,meR*2,meR*2);
+    ctx.fillStyle=pal.outline; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`800 ${meR*0.8}px "Baloo 2", system-ui, sans-serif`; ctx.fillText('+',meX,cy-meR*0.18);
+    ctx.font=`800 ${meR*0.26}px "Baloo 2", system-ui, sans-serif`; ctx.fillText('your photo',meX,cy+meR*0.42);
+  }
+  ctx.restore();
+  ctx.strokeStyle=pal.outline; ctx.lineWidth=S*0.22;
+  ctx.beginPath(); ctx.arc(meX,cy,meR,0,Math.PI*2); ctx.stroke();
+}
+
+function drawArm(sh,hx,hy,side,pal){
+  const mx=(sh.x+hx)/2+side*S*0.6, my=(sh.y+hy)/2+S*0.4;
+  ctx.strokeStyle=pal.gBody; ctx.lineWidth=S*0.42; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(sh.x,sh.y); ctx.quadraticCurveTo(mx,my,hx,hy); ctx.stroke();
+  ctx.fillStyle=pal.glove; ctx.beginPath(); ctx.arc(hx,hy,S*0.5,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=pal.outline; ctx.lineWidth=S*0.12; ctx.stroke();
+}
+
+function drawGrabber(pal){
+  const s=S, t=now*motion;
+  const sw=g.moving?Math.sin(t*12)*0.55:0;
+  const hipY=g.y-s*1.2, top=hipY-s*3.4;
+  // legs
+  ctx.lineCap='round'; ctx.strokeStyle=pal.gBody; ctx.lineWidth=s*0.42;
+  for(const k of[-1,1]){
+    const a=sw*k, fx=g.x+k*s*0.5+Math.sin(a)*s*1.1, fy=hipY+Math.cos(a)*s*1.2;
+    ctx.beginPath(); ctx.moveTo(g.x+k*s*0.5,hipY-s*0.1); ctx.lineTo(fx,fy); ctx.stroke();
+    ctx.fillStyle=pal.outline; ctx.beginPath(); ctx.ellipse(fx+g.face*s*0.2,fy,s*0.5,s*0.26,0,0,Math.PI*2); ctx.fill();
+  }
+  // arms behind body
+  const carrying=g.carry.length>0;
+  for(const k of[-1,1]){
+    if(g.arm&&g.arm.side===k) continue;
+    const sh=shoulder(k);
+    let hx,hy;
+    if(carrying){const end=g.carry[k<0?0:g.carry.length-1];hx=end.x+k*s*0.5;hy=end.y-s*1.3;}
+    else{const a=-sw*k;hx=sh.x+k*s*0.6+Math.sin(a)*s*0.8;hy=sh.y+s*1.4;}
+    drawArm(sh,hx,hy,k,pal);
+  }
+  if(grabImg){
+    let h=s*3.6, w=h*grabImg.width/grabImg.height;
+    if(w>s*4.4){w=s*4.4;h=w*grabImg.height/grabImg.width;}
+    ctx.drawImage(grabImg,g.x-w/2,hipY+s*0.1-h,w,h);
+    return;
+  }
+  // body: an original phone creature
+  ctx.fillStyle=pal.gBody; rr(g.x-s*1.1,top,s*2.2,s*3.4,s*0.5); ctx.fill();
+  ctx.fillStyle=pal.screen; rr(g.x-s*0.85,top+s*0.4,s*1.7,s*2.6,s*0.3); ctx.fill();
+  ctx.fillStyle=pal.gBody; rr(g.x-s*0.3,top+s*0.14,s*0.6,s*0.14,s*0.07); ctx.fill();
+  // face looks at whatever it wants
+  let lx=meX, ly=meY;
+  if(g.arm){lx=g.arm.p.x;ly=g.arm.p.y-s*2;}
+  else if(g.state==='up'||g.state==='home'&&g.timer<0.4){lx=g.x;ly=sideTop;}
+  let ex=lx-g.x, ey=ly-(top+s*1.3); const d=Math.hypot(ex,ey)||1; ex/=d; ey/=d;
+  for(const k of[-1,1]){
+    ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(g.x+k*s*0.38,top+s*1.3,s*0.3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=pal.eye; ctx.beginPath(); ctx.arc(g.x+k*s*0.38+ex*s*0.13,top+s*1.3+ey*s*0.13,s*0.14,0,Math.PI*2); ctx.fill();
+  }
+  ctx.strokeStyle=pal.eye; ctx.lineWidth=s*0.14;
+  ctx.beginPath();
+  if(g.arm||carrying) ctx.arc(g.x,top+s*2.05,s*0.42,0.1*Math.PI,0.9*Math.PI);
+  else ctx.arc(g.x,top+s*2.0,s*0.3,0.2*Math.PI,0.8*Math.PI);
+  ctx.stroke();
+}
+
+function draw(){
+  const pal=palette();
+  drawBackground(pal);
+  const walkers=people.filter(p=>p.state==='walking').sort((a,b)=>a.y-b.y);
+  walkers.forEach(p=>personPose(p,pal));
+  drawMe(pal);
+  const crowd=people.filter(p=>p.state==='seated'||p.state==='hop'||p.state==='leaving').sort((a,b)=>a.y-b.y);
+  crowd.forEach(p=>personPose(p,pal));
+  drawGrabber(pal);
+  people.filter(p=>p.state==='carried'||p.state==='grabbed').forEach(p=>personPose(p,pal));
+  if(g.arm&&g.arm.hx!=null) drawArm(shoulder(g.arm.side),g.arm.hx,g.arm.hy,g.arm.side,pal);
+}
+
+/* ---------- photo ---------- */
+function setPhoto(src,key){
+  const img=new Image();
+  img.onload=()=>{
+    const c=document.createElement('canvas');
+    if(key==='watchme-grabber'){
+      const k=Math.min(1,400/Math.max(img.width,img.height));
+      c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      grabImg=c;
+      try{localStorage.setItem(key,c.toDataURL('image/png'));}catch(e){}
+      return;
+    }
+    c.width=c.height=320;
+    const m=Math.min(img.width,img.height);
+    c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,320,320);
+    meImg=c;
+    try{localStorage.setItem(key,c.toDataURL('image/jpeg',0.85));}catch(e){}
+  };
+  img.src=src;
+}
+function hookInput(input,key){
+  input.addEventListener('change',()=>{
+    const f=input.files&&input.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=()=>setPhoto(r.result,key); r.readAsDataURL(f);
+    input.value='';
+  });
+  try{const saved=localStorage.getItem(key); if(saved) setPhoto(saved,key);}catch(e){}
+}
+hookInput(fileIn,'watchme-photo');
+hookInput(fileIn2,'watchme-grabber');
+
+function hit(e){
+  if(Math.hypot(e.clientX-meX,e.clientY-meY)<meR*1.1) return fileIn;
+  if(Math.hypot(e.clientX-g.x,e.clientY-(g.y-S*2.9))<S*2) return fileIn2;
+  return null;
+}
+cv.addEventListener('click',e=>{const t=hit(e); if(t) t.click();});
+cv.addEventListener('mousemove',e=>{cv.style.cursor=hit(e)?'pointer':'default';});
+
+/* ---------- go ---------- */
+window.addEventListener('resize',resize);
+resize();
+for(let i=0;i<Math.max(4,Math.floor(W/(S*7)));i++) newWalker(true);
+let last=performance.now();
+function frame(t){
+  const dt=Math.min(0.05,(t-last)/1000); last=t;
+  update(dt); draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
