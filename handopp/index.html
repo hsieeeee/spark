@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>اعمل العكس — SPARK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lalezar" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Handjet:wght@500;600;700;800;900" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P" rel="stylesheet">
+<style>
+  :root{
+    --pink:#FF1E9D; --lime:#B8FA17; --yellow:#FFEE00; --cyan:#3CEFDB; --purple:#A724FE;
+    --ink:#111111; --white:#FFFFFF; --blue:#2F5BFF; --red:#FF1F3D; --bow:#FFA9D2;
+    --frog:#5BC96E; --cream:#FFF8EC; --lilac:#D9B8FF; --screen:#15122E;
+    --sticker:-7px 7px 0 var(--ink);
+    --jelly:"Lalezar","Baloo Bhaijaan 2",system-ui,sans-serif;
+    --pixel:"Handjet",monospace;
+    --body:"Baloo Bhaijaan 2",system-ui,sans-serif;
+    --tag:"Press Start 2P",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:var(--body);font-weight:700;color:var(--ink);
+    background-color:#fff;background-size:800px 800px;
+    overflow-x:hidden;
+  }
+  /* film grain */
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.11;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  .wrap{max-width:1240px;margin:0 auto;padding:20px 40px 56px;position:relative}
+
+  /* ---------- top zone ---------- */
+  .top{position:relative;display:flex;justify-content:center;align-items:center;padding:8px 0 4px}
+  .halo{position:absolute;left:50%;top:50%;width:min(760px,96vw);height:300px;transform:translate(-50%,-50%);pointer-events:none;
+    background:
+      radial-gradient(circle,#FF1E9D 2.2px,transparent 2.6px) 0 0/14px 14px,
+      transparent;
+    -webkit-mask:radial-gradient(closest-side,#000 30%,transparent 100%);mask:radial-gradient(closest-side,#000 30%,transparent 100%);
+    opacity:.55}
+  .halo::before{content:"";position:absolute;inset:0;background:conic-gradient(from 90deg,#FF1E9D,#FFEE00,#B8FA17,#3CEFDB,#A724FE,#FF1E9D);
+    -webkit-mask:radial-gradient(circle,#000 2.4px,transparent 2.8px) 0 0/14px 14px;mask:radial-gradient(circle,#000 2.4px,transparent 2.8px) 0 0/14px 14px}
+  .logo{position:relative;width:min(520px,62vw);height:auto;display:block;transform:rotate(-2deg);filter:drop-shadow(-6px 6px 0 rgba(17,17,17,.0))}
+  .pill{position:absolute;top:18px;font-family:var(--jelly);font-size:22px;padding:6px 18px;border-radius:999px;border:4px solid var(--ink);box-shadow:var(--sticker);outline:5px solid #fff;outline-offset:0}
+  .pill.r{right:0;background:var(--purple);color:#fff;transform:rotate(3deg)}
+  .pill.l{left:0;background:var(--lime);color:var(--ink);transform:rotate(-3deg)}
+
+  /* ---------- windows ---------- */
+  .win{background:#fff;border:5px solid var(--ink);border-radius:18px;box-shadow:var(--sticker);position:relative;
+    outline:6px solid #fff;outline-offset:0}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;border-bottom:5px solid var(--ink);border-radius:12px 12px 0 0;direction:ltr}
+  .bar .t{font-family:var(--tag);font-size:11px;letter-spacing:.02em}
+  .bar .dots{display:flex;gap:6px}
+  .bar .dots i{width:16px;height:16px;border:3px solid var(--ink);background:#fff;display:block}
+  .bar.pink{background:var(--pink);color:var(--ink)}
+  .bar.cyan{background:var(--cyan)}
+  .bar.yellow{background:var(--yellow)}
+  .bar.lime{background:var(--lime)}
+  .graph{background-color:#fff;background-image:linear-gradient(#F1EAF8 1.5px,transparent 1.5px),linear-gradient(90deg,#F1EAF8 1.5px,transparent 1.5px);background-size:24px 24px}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:40px;margin-top:24px;align-items:start}
+  @media (max-width:980px){.layout{grid-template-columns:1fr}.wrap{padding:16px 18px 40px}}
+
+  /* ---------- CRT stage ---------- */
+  .crt{background:var(--cream);border:5px solid var(--ink);border-radius:34px;padding:18px;box-shadow:var(--sticker)}
+  .stage{position:relative;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:var(--screen);
+    border:6px solid var(--purple);box-shadow:inset 0 0 40px #3CEFDB66}
+  .stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:.78;filter:saturate(1.1)}
+  .stage canvas{position:absolute;inset:0;width:100%;height:100%}
+  .scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.18) 0 2px,transparent 2px 4px);mix-blend-mode:multiply}
+  .glow{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 60px 6px #3CEFDB55;border-radius:12px}
+
+  .crtfoot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:12px}
+  .knobs{display:flex;gap:10px}
+  .knobs i{width:22px;height:22px;border-radius:50%;border:4px solid var(--ink);background:var(--bow);display:block}
+  .knobs i:nth-child(2){background:var(--cyan)}
+  .crtfoot .brand{font-family:var(--tag);font-size:10px;direction:ltr}
+
+  /* command sticker on screen */
+  .cmd{position:absolute;left:50%;top:7%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;z-index:4}
+  .cmd .lbl{font-family:var(--pixel);font-weight:800;font-size:26px;color:var(--ink);background:var(--yellow);border:4px solid var(--ink);padding:0 14px 2px;border-radius:10px;box-shadow:-5px 5px 0 var(--ink)}
+  .cmd.pop .word{animation:pop .28s cubic-bezier(.3,1.6,.5,1)}
+  @keyframes pop{0%{transform:scale(.4) rotate(-8deg)}100%{transform:scale(1) rotate(0)}}
+
+  /* timer */
+  .timer{position:absolute;left:5%;right:5%;bottom:5%;height:26px;border:4px solid var(--ink);background:#fff;border-radius:999px;overflow:hidden;z-index:4;box-shadow:-5px 5px 0 var(--ink)}
+  .timer b{position:absolute;inset:0;transform-origin:right center;
+    background:repeating-linear-gradient(90deg,#FF1E9D 0 22px,#FFEE00 22px 44px,#B8FA17 44px 66px,#3CEFDB 66px 88px,#A724FE 88px 110px)}
+  .timer b::after{content:"";position:absolute;inset:3px 6px auto;height:5px;border-radius:9px;background:#fff8}
+
+  .hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;text-align:center;font-family:var(--pixel);font-weight:800;
+    font-size:clamp(26px,3.4vw,38px);color:var(--cyan);text-shadow:0 0 12px #3CEFDBaa,-3px 3px 0 var(--ink);pointer-events:none;white-space:nowrap}
+
+  .flash{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;transition:opacity .25s}
+  .flash.good{background:radial-gradient(circle,#B8FA1766,transparent 70%);opacity:1}
+  .flash.bad{background:radial-gradient(circle,#FF1F3D88,transparent 70%);opacity:1}
+
+  /* ---------- jelly / pixel words ---------- */
+  .jw{position:relative;display:inline-block;font-family:var(--jelly);font-weight:400;line-height:1.15;white-space:nowrap}
+  .jw::before,.jw::after{content:attr(data-t);position:absolute;left:0;top:0;white-space:nowrap;z-index:0}
+  .jw::before{-webkit-text-stroke:.24em #fff;color:#fff;filter:drop-shadow(-.09em .1em 0 var(--ink))}
+  .jw::after{-webkit-text-stroke:.1em var(--ink);color:var(--ink);z-index:1}
+  .jw > span{position:relative;z-index:2;
+    background:linear-gradient(180deg,var(--c) 0%,var(--c) 44%,#ffffffcc 47%,#ffffffcc 52%,var(--c) 55%,var(--c) 78%,var(--d) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .jw.pink{--c:#FF1E9D;--d:#c4006f}
+  .jw.purple{--c:#A724FE;--d:#6d00b8}
+  .jw.cyan{--c:#3CEFDB;--d:#10a897}
+  .jw.red{--c:#FF1F3D;--d:#b5001a}
+
+  .pw{position:relative;display:inline-block;font-family:var(--pixel);font-weight:900;line-height:1;font-size:1.1em;white-space:nowrap}
+  .pw::before{content:attr(data-t);position:absolute;left:0;top:0;white-space:nowrap;-webkit-text-stroke:.2em #fff;color:#fff;filter:drop-shadow(-.09em .1em 0 var(--ink));z-index:0}
+  .pw > span{position:relative;z-index:1;color:var(--c);-webkit-text-stroke:.06em var(--ink);paint-order:stroke fill;
+    text-shadow:-1px 1px 0 var(--d),-2px 2px 0 var(--d),-3px 3px 0 var(--d),-4px 4px 0 var(--d),-5px 5px 0 var(--ink),-6px 6px 0 var(--ink)}
+  .pw.lime{--c:#B8FA17;--d:#6f9e00}
+  .pw.yellow{--c:#FFEE00;--d:#b8a800}
+
+  .cmd .word{font-size:clamp(54px,8vw,104px)}
+  .cmd .word{display:flex;align-items:center;gap:.18em;direction:rtl}
+  .ico{font-size:.62em;line-height:1;width:1.35em;height:1.35em;display:flex;align-items:center;justify-content:center;background:var(--yellow);border:5px solid var(--ink);border-radius:18px;box-shadow:-6px 6px 0 var(--ink);outline:5px solid #fff;transform:rotate(-6deg)}
+
+  /* ---------- side panel ---------- */
+  .side{display:flex;flex-direction:column;gap:30px;padding-top:6px}
+  .counter{padding:16px 18px 18px;text-align:center}
+  .counter .n{font-family:var(--jelly);font-size:84px;line-height:1;color:var(--ink)}
+  .counter .k{font-family:var(--pixel);font-weight:800;font-size:26px;letter-spacing:.02em}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .note{background:var(--yellow);border:5px solid var(--ink);box-shadow:var(--sticker);padding:12px 12px 14px;text-align:center;transform:rotate(-2deg);position:relative}
+  .note.c{background:var(--cyan);transform:rotate(2deg)}
+  .note .k{font-family:var(--pixel);font-weight:800;font-size:22px}
+  .note .n{font-family:var(--jelly);font-size:44px;line-height:1}
+  .tape{position:absolute;top:-14px;left:50%;width:70px;height:22px;transform:translateX(-50%) rotate(-4deg);background:#ffffffb0;border:2px dashed #1113}
+
+  .status{padding:14px 16px}
+  .status .line{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:18px;padding:4px 0}
+  .chip{font-family:var(--pixel);font-weight:800;font-size:22px;padding:0 12px 2px;border:3px solid var(--ink);border-radius:10px;background:var(--lilac);min-width:92px;text-align:center}
+  .chip.on{background:var(--lime)}
+  .chip.off{background:var(--bow)}
+
+  .rules{padding:14px 16px 16px}
+  .bubble{background:#fff;border:4px solid var(--ink);border-radius:28px;padding:10px 16px;font-size:18px;line-height:1.45;box-shadow:-5px 5px 0 var(--ink);margin:0 0 14px;position:relative}
+  .bubble.ans{background:var(--pink);color:var(--ink);border-radius:28px 28px 28px 6px;margin-right:24px}
+  .bubble.q{border-radius:28px 28px 6px 28px;margin-left:24px}
+  .pairs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .pairs div{font-family:var(--pixel);font-weight:800;font-size:22px;background:var(--cream);border:3px solid var(--ink);border-radius:10px;text-align:center;padding:2px 4px}
+
+  /* ---------- overlay screens ---------- */
+  .screen{position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;padding:18px;
+    background:radial-gradient(circle at 50% 40%,#2a2460ee,#15122Ef5)}
+  .screen.hide{display:none}
+  .card{width:min(560px,100%);text-align:center}
+  .card .in{padding:18px 22px 24px}
+  .headline{font-size:clamp(40px,6.4vw,74px);display:flex;justify-content:center;align-items:baseline;gap:.14em;flex-wrap:wrap;margin:6px 0 10px}
+  .sub{display:inline-block;background:var(--ink);color:#fff;font-family:var(--pixel);font-weight:700;font-size:24px;padding:2px 16px 4px;border-radius:999px;margin-bottom:14px}
+  .btn{font-family:var(--jelly);font-size:34px;line-height:1.1;background:var(--pink);color:var(--ink);border:5px solid var(--ink);border-radius:999px;padding:10px 40px 12px;cursor:pointer;
+    box-shadow:-7px 7px 0 var(--ink);outline:6px solid #fff;transition:transform .08s,box-shadow .08s;position:relative}
+  .btn:hover{transform:translate(-2px,-2px) rotate(-1deg)}
+  .btn:active{transform:translate(-6px,6px);box-shadow:-1px 1px 0 var(--ink)}
+  .btn:disabled{opacity:.6;cursor:wait}
+  .err{margin-top:14px;font-size:17px;color:var(--ink);background:var(--bow);border:3px solid var(--ink);border-radius:18px;padding:8px 12px;display:none}
+  .loading{font-family:var(--pixel);font-size:22px;margin-top:12px;min-height:26px}
+  .over-big{font-size:clamp(46px,7vw,82px);margin:4px 0}
+  .why{font-size:20px;margin:6px 0 14px}
+  .why b{font-family:var(--jelly);font-weight:400;font-size:26px}
+  .scoreline{display:flex;justify-content:center;gap:18px;margin:6px 0 18px}
+  .scoreline .note{min-width:120px}
+
+  /* ---------- stickers ---------- */
+  .frog{position:absolute;top:-58px;left:46px;width:84px;z-index:6;image-rendering:pixelated;filter:drop-shadow(-4px 4px 0 var(--ink))}
+  .bow{position:absolute;width:56px;z-index:6}
+  .spark{position:absolute;width:34px;height:34px;pointer-events:none}
+  .spark::before,.spark::after{content:"";position:absolute;left:50%;top:50%;background:#fff;border-radius:2px;transform:translate(-50%,-50%)}
+  .spark::before{width:3px;height:100%;box-shadow:0 0 10px 3px var(--g)}
+  .spark::after{width:100%;height:3px;box-shadow:0 0 10px 3px var(--g)}
+  .heart{position:absolute;width:30px;image-rendering:pixelated}
+  .cursor{position:absolute;width:34px;z-index:9;pointer-events:none}
+
+  .mainpad{padding:22px}
+  @media (max-width:600px){
+    .mainpad{padding:10px}
+    .crt{padding:10px;border-radius:24px}
+    .stage{aspect-ratio:3/4}
+    .logo{width:80vw}
+    .top{padding-bottom:34px}
+    .pill{top:auto;bottom:0;font-size:17px;padding:3px 14px}
+    .frog{width:54px;top:-40px;left:24px}
+    .headline{font-size:40px}
+    .sub{font-size:19px}
+    .btn{font-size:26px;padding:8px 28px 10px}
+    .card .in{padding:12px 12px 18px}
+    .over-big{font-size:46px}
+    .why{font-size:16px}
+    .scoreline .note{min-width:96px}
+    .note .n{font-size:36px}
+    .counter .n{font-size:64px}
+    .layout{margin-top:40px}
+  }
+  footer{margin-top:40px;text-align:center;font-size:15px;color:#555}
+  footer .t{font-family:var(--tag);font-size:9px;direction:ltr;display:inline-block;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- logo zone -->
+  <div class="top">
+    <div class="halo"></div>
+    <img class="logo" src="spark-logo.png" alt="SPARK — For Tech Workshops">
+    <span class="pill r">لعبة يد</span>
+    <span class="pill l">للمبتدئين</span>
+    <i class="spark" style="--g:#FFEE00;top:20%;right:16%"></i>
+    <i class="spark" style="--g:#3CEFDB;top:72%;left:14%;width:24px;height:24px"></i>
+    <svg class="heart" style="top:62%;right:20%" viewBox="0 0 7 6"><path fill="#111" d="M1 0h2v1h1V0h2v1h1v3H6v1H5v1H2V5H1V4H0V1h1z"/><path fill="#FF1F3D" d="M1 1h2v1h1V1h2v2H5v1H4v1H3V4H2V3H1z"/><rect fill="#fff" x="1" y="1" width="1" height="1"/></svg>
+  </div>
+
+  <div class="layout">
+    <!-- main window -->
+    <div class="win" id="mainWin">
+      <svg class="frog" viewBox="0 0 16 13" shape-rendering="crispEdges" aria-hidden="true">
+        <!-- original pixel frog -->
+        <path fill="#111" d="M2 0h4v1h4V0h4v1h1v3h1v6h-1v2h-2v1H3v-1H1v-2H0V4h1V1h1z"/>
+        <path fill="#5BC96E" d="M2 1h4v1h4V1h4v3h1v6h-1v1h-1v1H3v-1H2v-1H1V4h1z"/>
+        <path fill="#fff" d="M3 2h2v2H3zM11 2h2v2h-2z"/>
+        <path fill="#111" d="M4 2h1v2H4zM12 2h1v2h-1z"/>
+        <path fill="#FFF3A0" d="M4 8h8v3H4z"/>
+        <path fill="#FFA9D2" d="M2 6h2v1H2zM12 6h2v1h-2z"/>
+        <path fill="#111" d="M6 6h4v1H6z"/>
+        <path fill="#FFA9D2" d="M6 0h1v1H6zM9 0h1v1H9z"/>
+      </svg>
+      <div class="bar pink"><span class="dots"><i></i><i></i></span><span class="t">handopp.exe</span></div>
+      <div class="graph mainpad">
+        <div class="crt">
+          <div class="stage" id="stage">
+            <video id="video" playsinline muted></video>
+            <canvas id="canvas"></canvas>
+            <div class="scan"></div><div class="glow"></div>
+            <div class="flash" id="flash"></div>
+
+            <div class="cmd" id="cmd" style="display:none">
+              <span class="lbl">سوّ العكس!</span>
+              <span class="word" id="cmdWord"></span>
+            </div>
+            <div class="hint" id="hint" style="display:none"></div>
+            <div class="timer" id="timer" style="display:none"><b id="timerFill"></b></div>
+
+            <!-- start screen -->
+            <div class="screen" id="startScreen">
+              <div class="card">
+                <div class="headline">
+                  <span class="jw pink" data-t="اعمل"><span>اعمل</span></span>
+                  <span class="pw lime" data-t="عكس"><span>عكس</span></span>
+                  <span class="jw purple" data-t="الحركة"><span>الحركة</span></span>
+                </div>
+                <div class="sub">أقول لك حركة… وأنت تسوي ضدها</div><br>
+                <button class="btn" id="startBtn">ابدأ اللعب</button>
+                <div class="loading" id="loading" style="color:var(--cyan)"></div>
+                <div class="err" id="err"></div>
+              </div>
+            </div>
+
+            <!-- game over -->
+            <div class="screen hide" id="overScreen">
+              <div class="card win" style="outline-color:#fff">
+                <div class="bar cyan"><span class="dots"><i></i><i></i></span><span class="t">game_over.exe</span></div>
+                <div class="in">
+                  <div class="over-big"><span class="jw red" data-t="خسرت!"><span>خسرت!</span></span></div>
+                  <div class="why" id="whyText"></div>
+                  <div class="scoreline">
+                    <div class="note"><span class="tape"></span><div class="k">نقاطك</div><div class="n" id="finalScore">٠</div></div>
+                    <div class="note c"><span class="tape"></span><div class="k">أفضل نتيجة</div><div class="n" id="finalBest">٠</div></div>
+                  </div>
+                  <button class="btn" id="againBtn">العب مرة ثانية</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="crtfoot">
+            <span class="knobs"><i></i><i></i></span>
+            <span class="brand">SPARK-CRT 2000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- side widgets -->
+    <aside class="side">
+      <div class="win">
+        <div class="bar yellow"><span class="dots"><i></i><i></i></span><span class="t">score.exe</span></div>
+        <div class="counter graph">
+          <div class="k">النقاط</div>
+          <div class="n" id="score">٠</div>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="note"><span class="tape"></span><div class="k">المرحلة</div><div class="n" id="level">١</div></div>
+        <div class="note c"><span class="tape"></span><div class="k">أفضل نتيجة</div><div class="n" id="best">٠</div></div>
+      </div>
+
+      <div class="win">
+        <div class="bar lime"><span class="dots"><i></i><i></i></span><span class="t">hand_scan.exe</span></div>
+        <div class="status">
+          <div class="line"><span>اليد</span><span class="chip off" id="sHand">ما فيه</span></div>
+          <div class="line"><span>المكان</span><span class="chip" id="sZone">—</span></div>
+          <div class="line"><span>الكف</span><span class="chip" id="sShape">—</span></div>
+        </div>
+      </div>
+
+      <div class="win">
+        <div class="bar cyan"><span class="dots"><i></i><i></i></span><span class="t">rules.txt</span></div>
+        <div class="rules">
+          <p class="bubble q">كيف ألعب؟</p>
+          <p class="bubble ans">إذا قلت لك «فوق» حرّك يدك تحت. إذا قلت «سكّر» افتح كفك. وإذا سويت نفس الكلمة… خسرت!</p>
+          <div class="pairs">
+            <div>فوق ⇄ تحت</div><div>يمين ⇄ يسار</div>
+            <div>افتح ⇄ سكّر</div><div>رجّع للوسط ●</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    كل ما رجعت يدك للوسط تجيك حركة جديدة، والوقت يقصر مع كل مرحلة.<br>
+    <span class="t">SPARK · FOR TECH WORKSHOPS · handopp</span>
+  </footer>
+</div>
+
+<script type="module">
+
+const $ = id => document.getElementById(id);
+const AR = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+
+/* ---------- wallpaper: soft pixel-art tile (SPARK Layout A) ---------- */
+(function wallpaper(){
+  const S = 800, C = 40, N = S / C, cols = ["#FF1E9D","#FFEE00","#B8FA17","#3CEFDB","#A724FE"];
+  const cv = document.createElement("canvas"); cv.width = cv.height = S;
+  const g = cv.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0,0,S,S);
+  const grid = [];
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let y=0;y<N;y++){ grid[y]=[]; for (let x=0;x<N;x++){
+    if (rnd() > 0.40){ grid[y][x] = null; continue; }
+    const bad = new Set([grid[y-1]?.[x], grid[y][x-1], grid[y-1]?.[x-1], grid[y-1]?.[x+1]]);
+    if (y===N-1) bad.add(grid[0]?.[x]); if (x===N-1) bad.add(grid[y][0]);
+    const ok = cols.filter(c => !bad.has(c));
+    grid[y][x] = ok.length ? ok[Math.floor(rnd()*ok.length)] : null;
+  }}
+  g.globalAlpha = 0.42;
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++){
+    const c = grid[y][x]; if (!c) continue;
+    const px = x*C, py = y*C;
+    g.fillStyle = c; g.fillRect(px,py,C,C);
+    g.fillStyle = "#ffffff"; g.fillRect(px,py,C,5); g.fillRect(px,py,5,C);
+    g.fillStyle = "#00000055"; g.fillRect(px,py+C-5,C,5); g.fillRect(px+C-5,py,5,C);
+  }
+  g.globalAlpha = 1; g.strokeStyle = "#F1EAF8"; g.lineWidth = 1.5;
+  for (let i=0;i<=N;i++){ g.beginPath(); g.moveTo(i*C,0); g.lineTo(i*C,S); g.stroke(); g.beginPath(); g.moveTo(0,i*C); g.lineTo(S,i*C); g.stroke(); }
+  document.body.style.backgroundImage = `url(${cv.toDataURL()})`;
+})();
+
+/* ---------- sound ---------- */
+let actx;
+function beep(f, d=0.09, type="square", v=0.06){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = actx.createOscillator(), gn = actx.createGain();
+    o.type = type; o.frequency.value = f; gn.gain.value = v;
+    o.connect(gn); gn.connect(actx.destination);
+    const t = actx.currentTime; gn.gain.exponentialRampToValueAtTime(0.0001, t+d);
+    o.start(t); o.stop(t+d);
+  }catch(e){}
+}
+const SFX = {
+  cmd: () => beep(660,.07),
+  win: () => { beep(880,.07); setTimeout(()=>beep(1320,.09),70); },
+  lose: () => { beep(300,.15,"sawtooth"); setTimeout(()=>beep(180,.3,"sawtooth"),140); },
+};
+
+/* ---------- commands ---------- */
+const CMDS = {
+  up:    { ar:"فوق",  arrow:"⬆", kind:"zone",  opp:"down"  },
+  down:  { ar:"تحت",  arrow:"⬇", kind:"zone",  opp:"up"    },
+  right: { ar:"يمين", arrow:"➡", kind:"zone",  opp:"left"  },
+  left:  { ar:"يسار", arrow:"⬅", kind:"zone",  opp:"right" },
+  open:  { ar:"افتح", arrow:"✋", kind:"shape", opp:"close" },
+  close: { ar:"سكّر", arrow:"✊", kind:"shape", opp:"open"  },
+};
+const ZONE_AR = { center:"الوسط", up:"فوق", down:"تحت", left:"يسار", right:"يمين" };
+const SHAPE_AR = { open:"مفتوح", close:"مسكّر" };
+const STYLE = ["pink","purple","cyan"];
+
+/* ---------- hand reading ---------- */
+const video = $("video"), canvas = $("canvas"), ctx = canvas.getContext("2d");
+const d2 = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+
+function readHand(lm){
+  // mirrored so "right" means the player's right on screen
+  const pts = lm.map(p => ({ x: 1 - p.x, y: p.y }));
+  const ids = [0,5,9,13,17];
+  const cx = ids.reduce((s,i)=>s+pts[i].x,0)/ids.length;
+  const cy = ids.reduce((s,i)=>s+pts[i].y,0)/ids.length;
+  const w = pts[0];
+  let ext = 0;
+  for (const [tip,pip] of [[8,6],[12,10],[16,14],[20,18]]) if (d2(pts[tip],w) > d2(pts[pip],w)*1.12) ext++;
+  const thumbOut = d2(pts[4], pts[17]) > d2(pts[3], pts[17]) * 1.05 && d2(pts[4], pts[5]) > d2(pts[0], pts[5]) * 0.45;
+  let shape = null;
+  if (ext >= 3) shape = "open";
+  else if (ext <= 1 && !(ext===1 && thumbOut)) shape = "close";
+  if (ext === 0) shape = "close";
+
+  const dx = cx - 0.5, dy = cy - 0.5;
+  let zone;
+  if (Math.abs(dx) < 0.15 && Math.abs(dy) < 0.14) zone = "center";
+  else if (Math.abs(dx) >= 0.2 || Math.abs(dy) >= 0.18){
+    zone = (Math.abs(dx)/0.2 > Math.abs(dy)/0.18) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up");
+  } else zone = null; // in-between band
+  return { pts, cx, cy, shape, zone };
+}
+
+/* ---------- game state ---------- */
+let best = 0; try { best = +localStorage.getItem("handopp-best") || 0; } catch(e){}
+$("best").textContent = AR(best);
+
+const G = { phase:"idle", score:0, cmd:null, t0:0, limit:3000, hand:null, lastCmd:null,
+            correctSince:0, wrongSince:0, wrongArmed:false, centerSince:0, roundGap:0 };
+
+function levelOf(s){ return 1 + Math.floor(s/5); }
+function limitFor(s){ return Math.max(1100, 3000 - s*80); }
+
+function setFlash(kind){ const f=$("flash"); f.className="flash "+kind; setTimeout(()=>f.className="flash",260); }
+function showHint(t){ const h=$("hint"); if (t){ h.textContent=t; h.style.display="block"; } else h.style.display="none"; }
+
+function pickCmd(){
+  const h = G.hand;
+  let keys = Object.keys(CMDS).filter(k => k !== G.lastCmd);
+  // trap: often name the shape you're already making, so you must switch
+  if (h && h.shape && Math.random() < 0.35) return h.shape === G.lastCmd ? keys[Math.floor(Math.random()*keys.length)] : h.shape;
+  return keys[Math.floor(Math.random()*keys.length)];
+}
+
+function startRound(){
+  const k = pickCmd(); G.cmd = k; G.lastCmd = k;
+  G.phase = "round"; G.t0 = performance.now(); G.limit = limitFor(G.score);
+  G.correctSince = 0; G.wrongSince = 0;
+  // the "wrong" move only counts as a loss once you move INTO it (or still hold it when time runs out)
+  const h = G.hand, c = CMDS[k];
+  const cur = h ? (c.kind==="zone" ? h.zone : h.shape) : null;
+  G.wrongArmed = cur !== k;
+  const w = $("cmdWord"), sty = STYLE[Math.floor(Math.random()*STYLE.length)];
+  w.innerHTML = `<span class="jw ${sty}" data-t="${c.ar}"><span>${c.ar}</span></span><span class="ico">${c.arrow}</span>`;
+  const cmdEl = $("cmd"); cmdEl.style.display = "flex"; cmdEl.classList.remove("pop"); void cmdEl.offsetWidth; cmdEl.classList.add("pop");
+  $("timer").style.display = "block"; showHint("");
+  SFX.cmd();
+}
+
+function winRound(){
+  G.score++; SFX.win(); setFlash("good");
+  $("score").textContent = AR(G.score); $("level").textContent = AR(levelOf(G.score));
+  G.phase = "between"; G.roundGap = performance.now(); G.centerSince = 0;
+  $("cmd").style.display = "none"; $("timer").style.display = "none";
+  showHint("رجّع يدك للوسط ●");
+}
+
+function lose(reason){
+  G.phase = "over"; SFX.lose(); setFlash("bad");
+  if (G.score > best){ best = G.score; try{ localStorage.setItem("handopp-best", best); }catch(e){} }
+  $("best").textContent = AR(best);
+  $("finalScore").textContent = AR(G.score); $("finalBest").textContent = AR(best);
+  $("whyText").innerHTML = reason;
+  $("cmd").style.display = "none"; $("timer").style.display = "none"; showHint("");
+  setTimeout(()=> $("overScreen").classList.remove("hide"), 450);
+}
+
+function resetGame(){
+  G.score = 0; G.lastCmd = null;
+  $("score").textContent = "٠"; $("level").textContent = "١";
+  $("overScreen").classList.add("hide");
+  G.phase = "between"; G.roundGap = performance.now(); G.centerSince = 0;
+  showHint("حط يدك في الوسط ●");
+}
+
+function tick(now){
+  const h = G.hand;
+  if (G.phase === "between"){
+    if (h && h.zone === "center"){
+      if (!G.centerSince) G.centerSince = now;
+      if (now - G.centerSince > 350 && now - G.roundGap > 600) startRound();
+    } else {
+      G.centerSince = 0;
+      showHint(h ? "رجّع يدك للوسط ●" : "وين يدك؟ ✋");
+    }
+    return;
+  }
+  if (G.phase !== "round") return;
+
+  const c = CMDS[G.cmd], elapsed = now - G.t0, left = Math.max(0, 1 - elapsed / G.limit);
+  $("timerFill").style.transform = `scaleX(${left})`;
+
+  const cur = h ? (c.kind === "zone" ? h.zone : h.shape) : null;
+  const isRight = cur === c.opp, isWrong = cur === G.cmd;
+
+  if (!isWrong) G.wrongArmed = true;
+  G.correctSince = isRight ? (G.correctSince || now) : 0;
+  G.wrongSince = (isWrong && G.wrongArmed) ? (G.wrongSince || now) : 0;
+
+  const HOLD = c.kind === "zone" ? 220 : 280;
+  if (G.correctSince && now - G.correctSince > HOLD) return winRound();
+  if (G.wrongSince && now - G.wrongSince > HOLD)
+    return lose(`قلت لك <b>${c.ar}</b> وسويت <b>${c.ar}</b>! الصح كان <b>${CMDS[c.opp].ar}</b>`);
+  if (elapsed > G.limit)
+    return lose(`خلص الوقت! قلت <b>${c.ar}</b> والصح كان <b>${CMDS[c.opp].ar}</b>`);
+}
+
+/* ---------- drawing ---------- */
+const BONES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+function draw(){
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  // zone guides
+  ctx.lineWidth = Math.max(2, W/320);
+  ctx.setLineDash([W/80, W/120]);
+  ctx.strokeStyle = "#3CEFDB88";
+  ctx.strokeRect(W*(0.5-0.15), H*(0.5-0.14), W*0.3, H*0.28);
+  ctx.setLineDash([]);
+  ctx.font = `800 ${Math.round(W/22)}px Handjet, monospace`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  if (G.phase !== "round"){
+    ctx.fillStyle = "#3CEFDB55";
+    for (const [z,x,y] of [["up",0.5,0.12],["down",0.5,0.8],["left",0.08,0.5],["right",0.92,0.5]]) ctx.fillText(ZONE_AR[z], W*x, H*y);
+  } else if (CMDS[G.cmd].kind === "zone"){
+    // danger edge: moving here loses
+    const z = G.cmd, t = W/40, gr = {up:[0,0,W,t*2],down:[0,H-t*2,W,t*2],left:[0,0,t*2,H],right:[W-t*2,0,t*2,H]}[z];
+    const pulse = 0.35 + 0.25*Math.sin(performance.now()/90);
+    ctx.fillStyle = `rgba(255,31,61,${pulse})`; ctx.fillRect(...gr);
+  }
+  // hand
+  const h = G.hand; if (!h) return;
+  const P = h.pts.map(p => ({ x:p.x*W, y:p.y*H }));
+  ctx.strokeStyle = "#FFEE00"; ctx.lineWidth = Math.max(3, W/200); ctx.lineCap = "round";
+  ctx.shadowColor = "#FFEE00"; ctx.shadowBlur = 10;
+  for (const [a,b] of BONES){ ctx.beginPath(); ctx.moveTo(P[a].x,P[a].y); ctx.lineTo(P[b].x,P[b].y); ctx.stroke(); }
+  ctx.shadowBlur = 0;
+  for (const p of P){ ctx.fillStyle = "#3CEFDB"; ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(4,W/150),0,7); ctx.fill(); ctx.strokeStyle="#111"; ctx.lineWidth=2; ctx.stroke(); }
+  // palm marker
+  const r = W/36; ctx.fillStyle = h.shape === "close" ? "#FF1E9D" : "#B8FA17";
+  ctx.strokeStyle = "#111"; ctx.lineWidth = 4;
+  ctx.fillRect(h.cx*W - r/2, h.cy*H - r/2, r, r); ctx.strokeRect(h.cx*W - r/2, h.cy*H - r/2, r, r);
+}
+
+function updateStatus(){
+  const h = G.hand;
+  const sh = $("sHand"); sh.textContent = h ? "موجودة" : "ما فيه"; sh.className = "chip " + (h ? "on" : "off");
+  $("sZone").textContent = h ? (h.zone ? ZONE_AR[h.zone] : "…") : "—";
+  $("sShape").textContent = h ? (h.shape ? SHAPE_AR[h.shape] : "…") : "—";
+}
+
+/* ---------- camera + model ---------- */
+let landmarker, lastVT = -1;
+async function initModel(){
+  const { HandLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+  const fileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  const opts = d => ({ baseOptions:{ modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", delegate:d },
+    runningMode:"VIDEO", numHands:1, minHandDetectionConfidence:0.6, minTrackingConfidence:0.5 });
+  try { landmarker = await HandLandmarker.createFromOptions(fileset, opts("GPU")); }
+  catch(e){ landmarker = await HandLandmarker.createFromOptions(fileset, opts("CPU")); }
+}
+
+function loop(){
+  const now = performance.now();
+  if (landmarker && video.readyState >= 2){
+    if (canvas.width !== video.videoWidth){ canvas.width = video.videoWidth; canvas.height = video.videoHeight; }
+    if (video.currentTime !== lastVT){
+      lastVT = video.currentTime;
+      const res = landmarker.detectForVideo(video, now);
+      G.hand = res.landmarks && res.landmarks.length ? readHand(res.landmarks[0]) : null;
+      updateStatus();
+    }
+  }
+  if (!window.__simHand) { tick(now); draw(); }
+  requestAnimationFrame(loop);
+}
+
+$("startBtn").onclick = async () => {
+  const btn = $("startBtn"); btn.disabled = true; $("err").style.display = "none";
+  beep(1, .01, "sine", 0.0001);
+  try{
+    $("loading").textContent = "نشغّل الكاميرا…";
+    const stream = await navigator.mediaDevices.getUserMedia({ video:{ width:{ideal:960}, height:{ideal:720}, facingMode:"user" }, audio:false });
+    video.srcObject = stream; await video.play();
+    $("loading").textContent = "نحمّل متتبع اليد…";
+    await initModel();
+    $("loading").textContent = "";
+    $("startScreen").classList.add("hide");
+    resetGame();
+  }catch(err){
+    console.error(err); btn.disabled = false; $("loading").textContent = "";
+    const e = $("err"); e.style.display = "block";
+    e.textContent = err && err.name === "NotAllowedError"
+      ? "الكاميرا مقفلة. اسمح لها من شريط العنوان وجرّب مرة ثانية."
+      : "ما قدرنا نشغّل اللعبة: " + (err && err.message || err) + " — جرّب كروم أو إيدج.";
+  }
+};
+$("againBtn").onclick = resetGame;
+requestAnimationFrame(loop);
+
+// test hook (used only for automated checks): inject a fake hand
+window.__handopp = { G, tick, draw, readHand, resetGame, CMDS,
+  sim(h){ window.__simHand = true; G.hand = h; updateStatus(); tick(performance.now()); draw(); } };
+</script>
+</body>
+</html>
