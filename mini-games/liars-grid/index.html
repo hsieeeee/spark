@@ -1,0 +1,13 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>شبكة الكذّاب</title>
+<style>body{font-family:system-ui,Tahoma,sans-serif;background:#1d1b2e;color:#fff;text-align:center;margin:0;padding:12px}button{font:inherit;display:block;width:min(420px,95%);margin:8px auto;padding:12px;border:0;border-radius:8px;background:#3a3658;color:#fff;cursor:pointer}button:hover{background:#ffb703;color:#000}a{color:#8ecae6}</style></head><body>
+<h2>🤥 شبكة الكذّاب</h2><p>جملة واحدة فقط كاذبة. اضغط عليها!</p>
+<h3 id="q"></h3><div id="cl"></div><p id="msg"></p><a href="../">← كل الألعاب</a>
+<script>
+const P=[
+{q:'من أكل الكعكة؟ (سامي، ليلى، خالد)',c:['الفاعل ليس سامي','الفاعل ليلى','الفاعل ليس ليلى','خالد بريء'],a:2,e:'الفاعلة ليلى.'},
+{q:'في أي صندوق الهدية؟ (أحمر، أزرق، أخضر)',c:['ليست في الأزرق','هي في الأحمر أو الأزرق','ليست في الأحمر','هي في الأزرق'],a:0,e:'الهدية في الصندوق الأزرق.'},
+{q:'من كسر المزهرية؟ (أحمد، نورة، فهد)',c:['الفاعل فهد','الفاعل ليس فهد ولا نورة','نورة بريئة','أحمد بريء'],a:1,e:'الفاعل فهد.'}];
+let i=0;
+function show(){const p=P[i%P.length];q.textContent=p.q;msg.textContent='';cl.innerHTML='';p.c.forEach((t,k)=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>{if(k==p.a){msg.textContent='✔ صحيح! '+p.e;i++;setTimeout(show,1800)}else msg.textContent='✘ لو كانت هذه كاذبة لتناقضت الجمل الباقية. حاول مرة أخرى'};cl.append(b)})}
+show();
+</script></body></html>

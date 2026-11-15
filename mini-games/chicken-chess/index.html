@@ -1,0 +1,181 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>شطرنج الدجاج</title>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Handjet:wght@500;600;700;800;900" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P" rel="stylesheet">
+<style>
+:root{--pink:#FF1E9D;--lime:#B8FA17;--yellow:#FFEE00;--cyan:#3CEFDB;--purple:#A724FE;--ink:#111;--blue:#2F5BFF;--red:#FF1F3D;--bow:#FFA9D2;--cream:#FFF8EC;--lilac:#D9B8FF;--screen:#15122E;--sq:60px;--sh:-5px 5px 0 var(--ink)}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Baloo Bhaijaan 2',system-ui,sans-serif;font-weight:700;color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;user-select:none;overflow-x:hidden;background:#fff;padding:14px 10px 30px}
+.hide{display:none!important}
+/* jelly + pixel headline */
+.hl{display:flex;gap:.18em;justify-content:center;align-items:baseline;flex-wrap:wrap;margin:.2em 0 .5em;line-height:1.25}
+.jelly,.pix{position:relative;display:inline-block;letter-spacing:0;font-kerning:normal}
+.jelly{font-family:Lalezar,'Baloo Bhaijaan 2',sans-serif;font-weight:400;font-size:clamp(46px,12vw,78px);color:var(--pink);
+ text-shadow:3px 0px 0 var(--ink),-3px 0px 0 var(--ink),0px 3px 0 var(--ink),0px -3px 0 var(--ink),3px 3px 0 var(--ink),-3px 3px 0 var(--ink),3px -3px 0 var(--ink),-3px -3px 0 var(--ink),3px 1px 0 var(--ink),-3px 1px 0 var(--ink),1px 3px 0 var(--ink),-2px 3px 0 var(--ink),3px -2px 0 var(--ink),-3px -2px 0 var(--ink),1px -3px 0 var(--ink),-2px -3px 0 var(--ink),-6px 8px 0 var(--ink)}
+.pix{font-family:Handjet,monospace;font-weight:900;font-size:clamp(52px,13.5vw,88px);color:var(--lime);
+ text-shadow:3px 0px 0 var(--ink),-3px 0px 0 var(--ink),0px 3px 0 var(--ink),0px -3px 0 var(--ink),3px 3px 0 var(--ink),-3px 3px 0 var(--ink),3px -3px 0 var(--ink),-3px -3px 0 var(--ink),3px 1px 0 var(--ink),-3px 1px 0 var(--ink),1px 3px 0 var(--ink),-2px 3px 0 var(--ink),3px -2px 0 var(--ink),-3px -2px 0 var(--ink),1px -3px 0 var(--ink),-2px -3px 0 var(--ink),-4px 4px 0 #6a9400,-5px 5px 0 #557700,-6px 6px 0 #3d5600,-7px 7px 0 #3d5600,-9px 9px 0 var(--ink)}
+.jelly.p2{color:var(--purple)}
+.tag{font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:.5px;direction:ltr}
+/* windows */
+.win{background:#fff;border:4px solid var(--ink);border-radius:18px;box-shadow:var(--sh);overflow:hidden}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;border-bottom:4px solid var(--ink);background:var(--pink);color:var(--ink)}
+.bar .dots{display:flex;gap:5px;direction:ltr}.bar .dots i{width:12px;height:12px;border:2.5px solid var(--ink);border-radius:3px;background:#fff;display:block}
+.bar.c{background:var(--cyan)}.bar.y{background:var(--yellow)}.bar.l{background:var(--lime)}.bar.u{background:var(--purple);color:#fff}.bar.u .dots i{border-color:var(--ink)}
+.bar b{font-family:Lalezar;font-weight:400;font-size:19px}
+.body{padding:10px 14px}
+/* pills & buttons */
+.pill{display:inline-block;font-family:Lalezar;font-weight:400;font-size:18px;padding:4px 16px;border:3px solid var(--ink);border-radius:999px;box-shadow:-3px 3px 0 var(--ink);background:var(--purple);color:#fff}
+.btn{font:400 20px Lalezar,sans-serif;padding:8px 22px 5px;border:4px solid var(--ink);border-radius:14px;background:var(--pink);color:var(--ink);cursor:pointer;margin:5px;box-shadow:var(--sh);transition:transform .08s,box-shadow .08s}
+.btn:hover{transform:translate(1px,-1px)}
+.btn:active{transform:translate(-4px,4px);box-shadow:-1px 1px 0 var(--ink)}
+.btn.s{background:#fff}.btn.y{background:var(--yellow)}.btn.l{background:var(--lime)}.btn.c{background:var(--cyan)}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.btn.on{background:var(--yellow);animation:wob .6s infinite alternate}@keyframes wob{to{transform:rotate(-2deg) scale(1.04)}}
+/* layout */
+#game{display:flex;flex-direction:column;align-items:center}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+#turn:empty{visibility:hidden}
+#turn{font:400 22px Lalezar,sans-serif;margin:8px 0 12px;min-height:40px;padding:6px 18px 3px;background:var(--ink);color:var(--cyan);border-radius:999px;box-shadow:-4px 4px 0 var(--pink)}
+.wrap{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.side{display:flex;flex-direction:column;gap:16px;width:210px;max-width:94vw}
+.corn{font-size:22px;letter-spacing:2px;min-height:32px}
+.tray{min-height:28px;font-size:15px;line-height:1.6;direction:ltr;display:flex;flex-wrap:wrap;gap:4px}
+.tray span{background:var(--cream);border:2px solid var(--ink);border-radius:8px;padding:0 5px}
+#cornBtn{white-space:nowrap;font-size:18px;padding:7px 14px 4px}
+.gh .jelly{font-size:clamp(40px,10vw,56px)}.gh .pix{font-size:clamp(46px,11.5vw,66px)}
+@media(max-width:760px){.boardwin{order:-1}.wrap{gap:16px}.side{width:min(420px,94vw)}}
+.hint{font-size:14px;line-height:1.5;opacity:.85;margin:4px 0 6px;font-weight:600}
+.boardwin .body{padding:12px;background:repeating-linear-gradient(0deg,#F1EAF8 0 1px,transparent 1px 20px),repeating-linear-gradient(90deg,#F1EAF8 0 1px,transparent 1px 20px),#fff}
+#board{position:relative;width:calc(var(--sq)*8);height:calc(var(--sq)*8);border-radius:10px;overflow:hidden;border:4px solid var(--ink);direction:ltr;box-sizing:content-box}
+.sq{position:absolute;width:var(--sq);height:var(--sq);cursor:pointer}.l{background:var(--cream)}.d{background:var(--lilac)}
+.sq.lm{box-shadow:inset 0 0 0 100px #FFEE0088}
+.sq.cand::after{content:'';position:absolute;inset:36%;border-radius:4px;background:var(--ink);opacity:.55}
+.sq.cand.cap::after{inset:5%;border-radius:10px;background:none;border:4px dashed var(--red);opacity:1}
+.sq.spot{box-shadow:inset 0 0 0 100px var(--pink)}.sq.sel{box-shadow:inset 0 0 0 100px var(--cyan)}
+.pc{position:absolute;width:var(--sq);height:var(--sq);display:flex;align-items:center;justify-content:center;transition:transform .35s cubic-bezier(.3,1.4,.6,1);pointer-events:none;z-index:2}
+.pc .tok{width:82%;height:82%;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;border:3px solid var(--ink);box-shadow:-3px 3px 0 var(--ink)}
+.pc.w .tok{background:radial-gradient(circle at 35% 28%,#fff 0 22%,var(--cream) 23% 60%,#f4e2c4)}
+.pc.b .tok{background:radial-gradient(circle at 35% 28%,#d38bff 0 20%,var(--purple) 21% 62%,#7a12c4)}
+.pc .g{font-family:'Segoe UI Symbol','DejaVu Sans','Noto Sans Symbols 2',serif;font-variant-emoji:text;font-size:calc(var(--sq)*.56);line-height:1}
+.pc.w .g{color:var(--ink)}.pc.b .g{color:#fff;text-shadow:-1px 1px 0 var(--ink)}
+.pc .bd{position:absolute;bottom:-6px;right:-7px;width:48%;height:48%;border-radius:50%;background:#fff;border:2.5px solid var(--ink);font-size:calc(var(--sq)*.22);display:flex;align-items:center;justify-content:center;line-height:1}
+.pc.b .bd{background:var(--yellow)}
+.pc .cr{position:absolute;top:-13px;font-size:calc(var(--sq)*.3);filter:drop-shadow(-1px 1px 0 var(--ink))}
+.pc.hop .tok{animation:hop .35s}@keyframes hop{50%{transform:translateY(-14px) scale(1.1)}}
+.pc.dead{transition:all .3s;opacity:0;transform-origin:center}
+.fox{position:absolute;font-size:calc(var(--sq)*.8);z-index:5;pointer-events:none;animation:fox 1.1s forwards}@keyframes fox{0%{opacity:0;transform:scale(.3)}30%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:translateX(120px) scale(1)}}
+/* log = CRT screen */
+.logwin{width:min(560px,94vw);margin-top:18px}
+#log{height:110px;overflow:auto;background:var(--screen);color:var(--cyan);padding:8px 14px;font:600 17px/1.55 Handjet,monospace;
+ background-image:repeating-linear-gradient(0deg,#ffffff0a 0 1px,transparent 1px 3px);box-shadow:inset 0 0 22px #3CEFDB33}
+#log div:first-child{color:var(--yellow)}
+/* overlays */
+.ov{position:fixed;inset:0;background:#ffffffcc;backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:9;padding:16px;overflow:auto}
+.ov>.win{width:min(480px,96vw);text-align:center}
+.ov .body{padding:16px 18px 20px}
+.diff{display:flex;gap:8px;margin:14px 0 8px;flex-wrap:wrap;justify-content:center}.diff .btn{min-width:110px}
+.how{text-align:right;line-height:1.85;font-size:17px;margin:4px 0 12px}
+.how div{background:var(--cream);border:3px solid var(--ink);border-radius:14px;padding:6px 12px;margin:8px 0;box-shadow:-3px 3px 0 var(--ink)}
+.big{font-size:64px;filter:drop-shadow(-3px 4px 0 var(--ink))}
+.lead{font-size:18px;margin:6px 0 2px}
+#stats{display:inline-block;margin:10px 0 4px;padding:4px 14px;background:var(--ink);color:var(--lime);font:700 20px Handjet,monospace;border-radius:10px}
+a.back{display:inline-block;color:var(--ink);margin:14px 6px 0;font:400 17px Lalezar;text-decoration:none;background:#fff;border:3px solid var(--ink);border-radius:999px;padding:4px 14px 1px;box-shadow:-3px 3px 0 var(--ink)}
+.spk{position:absolute;color:#fff;font-size:22px;pointer-events:none;filter:drop-shadow(0 0 5px var(--yellow)) drop-shadow(-1px 1px 0 var(--ink))}
+</style></head><body>
+<div id="game" class="hide">
+ <div class="hl gh"><span class="jelly" data-t="شطرنج">شطرنج</span><span class="pix">الدجاج</span></div>
+ <div id="turn"></div>
+ <div class="wrap">
+  <div class="side">
+   <div class="win"><div class="bar c"><b>🐔 دجاجاتك</b><span class="dots"><i></i><i></i></span></div>
+    <div class="body"><div class="corn" id="cornW"></div><button class="btn y" id="cornBtn" onclick="toggleCorn()">🌽 أطعمها ذرة</button>
+    <div class="hint">الذرة تجعل الدجاجة تطيعك وتذهب حيث تريد. تكسب ذرة مع كل أكلة.</div><div class="tray" id="trayW"></div></div></div>
+   <button class="btn s" onclick="ov('menuOv')">☰ القائمة</button>
+  </div>
+  <div class="win boardwin"><div class="bar"><span class="tag">chicken_chess.exe</span><span class="dots"><i></i><i></i><i></i></span></div><div class="body"><div id="board"></div></div></div>
+  <div class="side">
+   <div class="win"><div class="bar u"><b>🐓 الحظيرة السوداء</b><span class="dots"><i></i><i></i></span></div>
+    <div class="body"><div><span class="pill" id="dl" style="font-size:15px;background:var(--lime);color:var(--ink)"></span></div><div class="corn" id="cornB" style="margin-top:6px"></div><div class="tray" id="trayB"></div></div></div>
+  </div>
+ </div>
+ <div class="win logwin"><div class="bar y"><b>📟 سجل المباراة</b><span class="dots"><i></i><i></i></span></div><div id="log"></div></div>
+ <a class="back" href="../">← كل الألعاب</a>
+</div>
+<div class="ov" id="menuOv"><div class="win"><div class="bar"><span class="tag">chicken_chess.exe</span><span class="dots"><i></i><i></i><i></i></span></div><div class="body">
+ <div class="big">🐔♟️🐓</div>
+ <div class="hl"><span class="jelly" data-t="شطرنج">شطرنج</span><span class="pix">الدجاج</span></div>
+ <p class="lead">أنت تختار الدجاجة... وهي تختار إلى أين تذهب!</p>
+ <div class="diff"><button class="btn l" onclick="init(0)">🐣 سهل</button><button class="btn c" onclick="init(1)">🐔 متوسط</button><button class="btn" onclick="init(2)">🦅 صعب</button></div>
+ <div id="stats"></div><br><button class="btn s" onclick="ov('howOv')">طريقة اللعب</button><br><a class="back" href="../">← كل الألعاب</a></div></div></div>
+<div class="ov hide" id="howOv"><div class="win"><div class="bar c"><b>طريقة اللعب</b><span class="dots"><i></i><i></i></span></div><div class="body"><div class="how">
+ <div>🐔 أنت الأبيض. اضغط على أي دجاجة لك.</div><div>🎰 الدجاجة تختار عشوائياً من حركاتها المسموحة في الشطرنج.</div><div>🌽 اضغط "أطعمها ذرة" ثم اختر القطعة والمربع لتتحكم بالحركة. تبدأ بذرتين وتكسب واحدة مع كل أكلة.</div><div>👑 كُل ملك الخصم لتفوز (لا يوجد كش ملك هنا، فقط أكل!).</div><div>🥚 الجندي الذي يصل للنهاية يبيض بيضة ذهبية ويصبح ملكة.</div><div>🦊 أحياناً يأتي الثعلب ويخطف قطعة عشوائية!</div></div>
+ <button class="btn" onclick="ov('menuOv')">كاك كاك!</button></div></div></div>
+<div class="ov hide" id="endOv"><div class="win"><div class="bar y"><b>انتهت المباراة</b><span class="dots"><i></i><i></i></span></div><div class="body"><div class="big" id="ei"></div><div class="hl"><span class="jelly" id="et" data-t=""></span></div><p id="em" class="lead"></p><button class="btn" onclick="init(diff)">مباراة أخرى</button><button class="btn s" onclick="ov('menuOv')">القائمة</button></div></div></div>
+<script>
+const AC=new (window.AudioContext||window.webkitAudioContext)();
+function beep(f,d=.1,type='square',v=.07,slide=0,delay=0){try{if(AC.state=='suspended')AC.resume();const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d)}catch(e){}}
+const cluck=()=>{beep(900,.05,'square',.05,600);beep(1000,.06,'square',.05,700,.08)};
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const G={K:'♚',Q:'♛',R:'♜',B:'♝',N:'♞',P:'♟'},NM={K:'الملك',Q:'الملكة',R:'القلعة',B:'الفيل',N:'الحصان',P:'الجندي'},VAL={P:1,N:3,B:3,R:5,Q:9,K:100},FILES='abcdefgh';
+const DIFF=['🐣 سهل','🐔 متوسط','🦅 صعب'];
+let B,turn,busy,corn,cornMode,sel,diff=0,moveN,lm=[],sq,squares=[],over,stats=store.get('cc_stats',{w:0,l:0,d:0});
+const boardEl=document.getElementById('board');
+function ov(id){document.querySelectorAll('.ov').forEach(o=>o.classList.add('hide'));if(id){document.getElementById(id).classList.remove('hide');if(id=='menuOv')document.getElementById('stats').textContent=`فوز ${stats.w} • خسارة ${stats.l} • تعادل ${stats.d}`}}
+function size(){sq=Math.max(36,Math.min(64,Math.floor((Math.min(innerWidth,640)-64)/8)));document.documentElement.style.setProperty('--sq',sq+'px');if(B)for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(B[r][c])pos(B[r][c].el,r,c)}
+onresize=size;
+const pos=(el,r,c)=>el.style.transform=`translate(${c*sq}px,${r*sq}px)`;
+function mkEl(p){const e=document.createElement('div');e.className='pc '+p.col;e.innerHTML=`<div class="tok"><span class="g">${G[p.t]}\uFE0E</span><span class="bd">${p.col=='w'?'🐔':'🐓'}</span>${p.t=='K'?'<span class="cr">👑</span>':''}</div>`;boardEl.append(e);return e}
+function init(d){diff=d;size();boardEl.innerHTML='';squares=[];for(let r=0;r<8;r++){squares.push([]);for(let c=0;c<8;c++){const s=document.createElement('div');s.className='sq '+((r+c)%2?'d':'l');s.style.left=c*100/8+'%';s.style.top=r*100/8+'%';s.style.width=s.style.height=12.5+'%';s.onclick=()=>click(r,c);boardEl.append(s);squares[r].push(s)}}
+ const back='RNBQKBNR';B=[...Array(8)].map(()=>Array(8).fill(null));for(let c=0;c<8;c++){B[0][c]={col:'b',t:back[c]};B[1][c]={col:'b',t:'P'};B[6][c]={col:'w',t:'P'};B[7][c]={col:'w',t:back[c]}}
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(B[r][c]){B[r][c].el=mkEl(B[r][c]);pos(B[r][c].el,r,c)}
+ corn={w:2,b:2};cornMode=0;sel=null;turn='w';busy=0;over=0;moveN=0;lm=[];trayW.innerHTML=trayB.innerHTML='';log.innerHTML='';dl.textContent=DIFF[d];
+ document.getElementById('game').classList.remove('hide');ov(null);addLog('🐔 بدأت المباراة! دورك.');ui();cluck()}
+function moves(r,c){const p=B[r][c],col=p.col,t=p.t,o=[];const add=(rr,cc)=>{if(rr<0||rr>7||cc<0||cc>7)return 0;const q=B[rr][cc];if(!q){o.push([rr,cc]);return 1}if(q.col!=col)o.push([rr,cc]);return 0};
+ const ray=ds=>ds.forEach(([a,b])=>{let rr=r+a,cc=c+b;while(add(rr,cc)){rr+=a;cc+=b}});const D=[[1,1],[1,-1],[-1,1],[-1,-1]],O=[[1,0],[-1,0],[0,1],[0,-1]];
+ if(t=='P'){const d=col=='w'?-1:1;if(B[r+d]&&!B[r+d][c]){o.push([r+d,c]);if(r==(col=='w'?6:1)&&!B[r+2*d][c])o.push([r+2*d,c])}[-1,1].forEach(e=>{const q=B[r+d]?.[c+e];if(q&&q.col!=col)o.push([r+d,c+e])})}
+ if(t=='N')[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]].forEach(([a,b])=>add(r+a,c+b));if(t=='K')D.concat(O).forEach(([a,b])=>add(r+a,c+b));
+ if(t=='B')ray(D);if(t=='R')ray(O);if(t=='Q')ray(D.concat(O));return o}
+function clearMarks(){squares.flat().forEach(s=>s.classList.remove('cand','cap','spot','sel','lm'));lm.forEach(([r,c])=>squares[r][c].classList.add('lm'))}
+function mark(r,c,ms){clearMarks();squares[r][c].classList.add('sel');ms.forEach(([R,C])=>{squares[R][C].classList.add('cand');if(B[R][C])squares[R][C].classList.add('cap')})}
+function ui(){cornW.textContent='🌽'.repeat(corn.w)||'—';cornB.textContent='🌽'.repeat(corn.b)||'—';cornBtn.disabled=!corn.w||turn!='w'||busy||over;cornBtn.classList.toggle('on',!!cornMode);
+ turnEl.textContent=over?'':turn=='w'?(cornMode?'🌽 اختر دجاجة ثم المربع الذي تريده':'دورك! اختر دجاجة 🐔'):'الحظيرة السوداء تفكر... 🐓'}
+const turnEl=document.getElementById('turn');
+function toggleCorn(){if(!corn.w||turn!='w'||busy)return;cornMode=!cornMode;sel=null;clearMarks();ui();beep(cornMode?700:400,.08,'triangle',.06)}
+function addLog(s){const d=document.createElement('div');d.textContent=s;log.prepend(d)}
+const sqn=(r,c)=>FILES[c]+(8-r);
+function click(r,c){if(over||busy||turn!='w')return;const p=B[r][c];
+ if(cornMode&&sel){const ms=moves(...sel);if(ms.some(([R,C])=>R==r&&C==c)){corn.w--;cornMode=0;const s=sel;sel=null;return doMove(s[0],s[1],r,c,1)}}
+ if(!p||p.col!='w')return;const ms=moves(r,c);if(!ms.length){p.el.classList.remove('hop');void p.el.offsetWidth;p.el.classList.add('hop');addLog(`🐔 ${NM[p.t]} ترفض التحرك... لا يوجد مكان!`);beep(200,.15,'sawtooth',.05);return}
+ if(cornMode){sel=[r,c];mark(r,c,ms);cluck();return}roll(r,c,ms)}
+function roll(r,c,ms,fast){busy=1;ui();mark(r,c,ms);const pick=ms[Math.random()*ms.length|0],n=ms.length==1?1:(fast?6:9)+(Math.random()*4|0);let i=0,seq=[];for(let k=0;k<n-1;k++)seq.push(ms[Math.random()*ms.length|0]);seq.push(pick);
+ const tick=()=>{squares.flat().forEach(s=>s.classList.remove('spot'));const[R,C]=seq[i];squares[R][C].classList.add('spot');beep(600+i*30,.03,'square',.04);i++;if(i<seq.length)setTimeout(tick,(fast?40:60)+i*i*(fast?2:4));else setTimeout(()=>doMove(r,c,R,C,0),250)};tick()}
+function doMove(r,c,R,C,byCorn){busy=1;const p=B[r][c],cap=B[R][C];B[R][C]=p;B[r][c]=null;pos(p.el,R,C);p.el.classList.remove('hop');void p.el.offsetWidth;p.el.classList.add('hop');
+ const side=p.col=='w'?'🐔':'🐓';let msg=`${side} ${NM[p.t]} ${byCorn?'(بالذرة 🌽) ':''}${sqn(r,c)} ← ${sqn(R,C)}`;
+ if(cap){cap.el.classList.add('dead');cap.el.style.transform+=' scale(1.8)';setTimeout(()=>cap.el.remove(),300);(p.col=='w'?trayW:trayB).innerHTML+=`<span>${cap.col=='w'?'🐔':'🐓'}${G[cap.t]}</span> `;msg+=` وأكلت ${NM[cap.t]}! 🍗`;if(corn[p.col]<5)corn[p.col]++;beep(180,.2,'sawtooth',.07,60);cluck()}else beep(440,.06,'triangle',.05);
+ if(p.t=='P'&&(R==0||R==7)){p.t='Q';setTimeout(()=>{p.el.querySelector('.g').textContent=G.Q+'\uFE0E';beep(880,.1,'triangle',.07);beep(1320,.2,'triangle',.07,0,.1)},350);msg+=' 🥚 باضت بيضة ذهبية وأصبحت ملكة!'}
+ addLog(msg);lm=[[r,c],[R,C]];clearMarks();moveN++;
+ if(cap&&cap.t=='K')return setTimeout(()=>end(p.col=='w'?'w':'b'),600);
+ setTimeout(()=>{if(p.col=='b'&&Math.random()<.1&&fox())return;next()},450)}
+function fox(){const all=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(B[r][c]&&B[r][c].t!='K')all.push([r,c]);if(!all.length)return 0;const[r,c]=all[Math.random()*all.length|0],p=B[r][c];
+ const f=document.createElement('div');f.className='fox';f.textContent='🦊';f.style.left=c*sq+'px';f.style.top=r*sq+'px';boardEl.append(f);beep(300,.3,'sawtooth',.06,800);
+ setTimeout(()=>{p.el.classList.add('dead');setTimeout(()=>p.el.remove(),300);B[r][c]=null;addLog(`🦊 الثعلب خطف ${NM[p.t]} ${p.col=='w'?'الأبيض':'الأسود'}!`)},400);setTimeout(()=>{f.remove();next()},1100);return 1}
+function next(){busy=0;const kings=[].concat(...B).filter(Boolean);if(kings.every(p=>p.t=='K')||moveN>=240)return end('d');turn=turn=='w'?'b':'w';
+ if(!hasMoves(turn)){addLog(`${turn=='w'?'🐔':'🐓'} لا توجد حركات... تخطّي الدور`);turn=turn=='w'?'b':'w'}ui();if(turn=='b')setTimeout(ai,600)}
+function hasMoves(col){for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(B[r][c]?.col==col&&moves(r,c).length)return 1;return 0}
+function ai(){if(over)return;const ps=[],caps=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(B[r][c]?.col=='b'){const ms=moves(r,c);if(ms.length){ps.push([r,c,ms]);ms.forEach(m=>{const q=B[m[0]][m[1]];if(q)caps.push([r,c,m,VAL[q.t]])})}}
+ if(!ps.length)return next();caps.sort((a,b)=>b[3]-a[3]);const bestCap=caps[0];
+ const useCorn=corn.b&&bestCap&&(bestCap[3]>=100||(diff==2&&bestCap[3]>=3)||(diff==1&&bestCap[3]>=9));
+ if(useCorn){corn.b--;ui();addLog('🌽 الحظيرة السوداء أطعمت دجاجتها ذرة!');const[r,c,m]=bestCap;mark(r,c,[m]);return setTimeout(()=>doMove(r,c,m[0],m[1],1),600)}
+ let ch;if(diff==0)ch=ps[Math.random()*ps.length|0];else if(diff==1){const wc=ps.filter(([r,c,ms])=>ms.some(m=>B[m[0]][m[1]]));ch=wc.length&&Math.random()<.5?wc[Math.random()*wc.length|0]:ps[Math.random()*ps.length|0]}
+ else{const sc=ps.map(p=>[p,p[2].reduce((s,m)=>s+(B[m[0]][m[1]]?VAL[B[m[0]][m[1]].t]:0),0)/p[2].length+Math.random()*.3]);sc.sort((a,b)=>b[1]-a[1]);ch=sc[0][0]}
+ roll(ch[0],ch[1],ch[2],1)}
+function end(w){over=1;busy=0;ui();if(w=='w')stats.w++;else if(w=='b')stats.l++;else stats.d++;store.set('cc_stats',stats);
+ (w=='w'?[523,659,784,1046]:[400,330,260]).forEach((f,i)=>beep(f,.2,'triangle',.07,0,i*.13));
+ setTimeout(()=>{ei.textContent=w=='w'?'🏆🐔':w=='b'?'🍗😭':'🤝';et.textContent=et.dataset.t=w=='w'?'فزت!':w=='b'?'أكلوا ملكك!':'تعادل!';et.style.color=w=='w'?'var(--lime)':w=='b'?'var(--pink)':'var(--cyan)';em.textContent=`عدد الحركات: ${moveN} • الصعوبة: ${DIFF[diff]}`;ov('endOv')},700)}
+(function(){const T=40,N=20,c=document.createElement('canvas');c.width=c.height=T*N;const x=c.getContext('2d'),C=['#FF1E9D','#FFEE00','#B8FA17','#3CEFDB','#A724FE'],g=[];x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+ for(let r=0;r<N;r++){g.push([]);for(let k=0;k<N;k++){let v=null;if(Math.random()<.4){const ok=C.filter(h=>h!=g[r-1]?.[k]&&h!=g[r][k-1]);v=ok[Math.random()*ok.length|0]}g[r].push(v);
+ x.globalAlpha=1;x.strokeStyle='#F1EAF8';x.strokeRect(k*T+.5,r*T+.5,T,T);if(v){x.globalAlpha=.42;x.fillStyle=v;x.fillRect(k*T,r*T,T,T);x.fillStyle='#fff';x.fillRect(k*T,r*T,T,5);x.fillRect(k*T,r*T,5,T);x.fillStyle='#0003';x.fillRect(k*T,r*T+T-5,T,5);x.fillRect(k*T+T-5,r*T,5,T)}}}
+ document.body.style.background=`url(${c.toDataURL()}) #fff`})();
+size();ov('menuOv');
+</script></body></html>

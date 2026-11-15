@@ -1,0 +1,14 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>الغميضة بالصور</title>
+<style>body{font-family:system-ui,Tahoma,sans-serif;background:#1d1b2e;color:#fff;text-align:center;margin:0;padding:12px}button{font:inherit;padding:8px 16px;margin:4px;border:0;border-radius:8px;background:#ffb703;cursor:pointer}canvas{background:#a8dadc;border-radius:10px;max-width:100%}a{color:#8ecae6}</style></head><body>
+<h2>🔑 الغميضة بالصور</h2><p id="msg"></p>
+<canvas id="cv" width="400" height="400"></canvas><br><button id="btn" style="display:none" onclick="seek()">سلّم الجهاز للباحث 👉</button><button onclick="init()">صورة جديدة</button><br><br><a href="../">← كل الألعاب</a>
+<script>
+const c=cv.getContext('2d'),E=['🌳','🏠','🚗','🐶','🍎','⚽','🎈','🌸','📦','🧸','🍕','🐟','⭐','🎩','🧦','🍌','🗝️','🔒','🪙','🧀'];let items,key,ph,t0,miss=[];
+function init(){items=[...Array(280)].map(()=>({e:E[Math.random()*E.length|0],x:Math.random()*400,y:Math.random()*400,s:14+Math.random()*28}));key=null;ph=0;btn.style.display='none';msg.textContent='اللاعب ١: اضغط في أي مكان لإخفاء المفتاح الصغير 🔑';draw()}
+function draw(){c.clearRect(0,0,400,400);c.textAlign='center';c.textBaseline='middle';for(const i of items){c.font=i.s+'px serif';c.fillText(i.e,i.x,i.y)}if(key){c.font='13px serif';c.fillText('🔑',key.x,key.y)}c.strokeStyle='#e63946';c.lineWidth=3;miss.forEach(m=>{c.beginPath();c.arc(m.x,m.y,10,0,7);c.stroke()})}
+function seek(){ph=2;btn.style.display='none';t0=performance.now();miss=[];msg.textContent='الباحث: ابحث عن المفتاح 🔑 بأسرع ما يمكن!';draw()}
+cv.onclick=e=>{const b=cv.getBoundingClientRect(),x=(e.clientX-b.left)*400/b.width,y=(e.clientY-b.top)*400/b.height;
+if(ph==0){key={x,y};ph=1;draw();msg.textContent='تم الإخفاء! الآن سلّم الجهاز';btn.style.display='inline'}
+else if(ph==2){if(Math.hypot(x-key.x,y-key.y)<16){ph=3;miss=[];draw();c.strokeStyle='#2a9d8f';c.beginPath();c.arc(key.x,key.y,18,0,7);c.stroke();msg.textContent='🎉 وجدته في '+((performance.now()-t0)/1000).toFixed(1)+' ثانية!'}else{miss.push({x,y});draw()}}};
+init();
+</script></body></html>

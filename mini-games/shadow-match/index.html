@@ -1,0 +1,16 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مطابقة الظل</title>
+<style>body{font-family:system-ui,Tahoma,sans-serif;background:#1d1b2e;color:#fff;text-align:center;margin:0;padding:12px}button{font:inherit;font-size:22px;padding:8px 20px;margin:4px;border:0;border-radius:8px;background:#ffb703;cursor:pointer}canvas{background:#2b2840;border-radius:10px;max-width:100%}a{color:#8ecae6}</style></head><body>
+<h2>🔦 مطابقة الظل</h2><p>دوّر الجسم حتى يطابق الظل على الجدار</p>
+<canvas id="cv" width="400" height="260"></canvas>
+<div><button onclick="rot(15)">⟳</button><button onclick="rot(-15)">⟲</button></div>
+<p>المستوى: <b id="lvl">1</b> — <span id="msg"></span></p><a href="../">← كل الألعاب</a>
+<script>
+const c=cv.getContext('2d');
+const S=[[[-40,-40],[40,-40],[40,0],[0,0],[0,40],[-40,40]],[[-50,-10],[20,-10],[20,-40],[50,0],[20,40],[20,10],[-50,10]],[[-30,-50],[10,-50],[10,10],[40,10],[40,50],[-30,50]],[[0,-50],[45,30],[10,30],[10,50],[-20,50],[-20,10],[-45,10]]];
+let lv=0,T,P,lock=0;
+function nw(){T=15*(Math.random()*24|0);do P=15*(Math.random()*24|0);while(P==T);msg.textContent='';lvl.textContent=lv+1;lock=0;draw()}
+function poly(pts,cx,cy,a,f){const r=a*Math.PI/180;c.beginPath();pts.forEach(([x,y],i)=>{const X=cx+x*Math.cos(r)-y*Math.sin(r),Y=cy+x*Math.sin(r)+y*Math.cos(r);i?c.lineTo(X,Y):c.moveTo(X,Y)});c.closePath();c.fillStyle=f;c.fill()}
+function draw(){c.clearRect(0,0,400,260);c.fillStyle='#e9e4d0';c.fillRect(0,0,200,260);c.font='14px Tahoma';c.fillStyle='#555';c.fillText('الجدار',100,20);c.fillStyle='#ccc';c.fillText('جسمك',300,20);c.textAlign='center';const s=S[lv%S.length];poly(s,100,135,T,'#222');poly(s,300,135,P,'#ffb703')}
+function rot(d){if(lock)return;P=(P+d+360)%360;draw();if(P==T){lock=1;msg.textContent='✔ تطابق! ممتاز';lv++;setTimeout(nw,900)}}
+onkeydown=e=>{if(e.key=='ArrowLeft')rot(-15);if(e.key=='ArrowRight')rot(15)};nw();
+</script></body></html>

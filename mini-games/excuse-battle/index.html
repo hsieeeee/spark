@@ -1,0 +1,13 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>معركة الأعذار</title>
+<style>body{font-family:system-ui,Tahoma,sans-serif;background:#1d1b2e;color:#fff;text-align:center;margin:0;padding:12px}button{font:inherit;padding:10px 18px;margin:6px;border:0;border-radius:8px;background:#ffb703;cursor:pointer}.ex{display:block;width:min(440px,95%);margin:8px auto;background:#3a3658;color:#fff}textarea,input{font:inherit;width:min(420px,90%);padding:8px;border-radius:8px;border:0}a{color:#8ecae6}</style></head><body>
+<h2>🙊 معركة الأعذار</h2><div id="app"></div><br><a href="../">← كل الألعاب</a>
+<script>
+const SC=['تأخرت 3 ساعات عن حفل زفافك','أكلت غداء مديرك من الثلاجة','نسيت عيد ميلاد أمك','وصلت للامتحان بالبيجامة','كسرت سيارة جارك الجديدة','نمت أثناء اجتماع مهم بالفيديو'];
+let n=3,sc,ex,cur;
+function start(){app.innerHTML=`<p>عدد اللاعبين:</p><input id="np" type="number" min="2" max="8" value="${n}" style="width:80px"><br><button onclick="n=+np.value||3;round()">ابدأ</button>`}
+function round(){sc=SC[Math.random()*SC.length|0];ex=[];cur=1;ask()}
+function ask(){app.innerHTML=`<h3>الموقف: ${sc}</h3><p>اللاعب ${cur}: اكتب عذرك (لا تدع أحداً يرى!)</p><textarea id="tx" rows="3"></textarea><br><button onclick="sub()">التالي</button>`;tx.focus()}
+function sub(){ex.push({p:cur,t:tx.value.trim()||'...لا يوجد عذر 😶'});if(++cur<=n)ask();else vote()}
+function vote(){app.innerHTML=`<h3>الموقف: ${sc}</h3><p>صوّتوا معاً على أفضل عذر:</p>`;ex.sort(()=>Math.random()-.5).forEach(e=>{const b=document.createElement('button');b.className='ex';b.textContent=e.t;b.onclick=()=>{app.innerHTML=`<h3>🏆 الفائز: اللاعب ${e.p}</h3><p>"${e.t.replace(/</g,'&lt;')}"</p><button onclick="round()">جولة جديدة</button>`};app.append(b)})}
+start();
+</script></body></html>
