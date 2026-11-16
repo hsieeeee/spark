@@ -788,7 +788,7 @@ const STAGES = [
     makeTerrain(320,140,hfn,(x,z,y,c)=>{ const n=(Math.sin(x*.5)*Math.cos(z*.43))*.05; const k=clamp(y/40,0,1); c.setRGB(.62-k*.18+n,.48-k*.16+n,.36-k*.12+n); });
     mountainsRing(150,230,26,[0x8a6648,0x7a5a40,0x9b7350],30,80);
     // boulders
-    for(let i=0;i<70;i++){ const x=R(-60,60), z=R(-70,75); if(Math.hypot(x,z+26)<12) continue; if(Math.abs(x-Math.sin(z*.08)*6)<3 && z>-18) continue; const r=R(.8,2.6); const b=new THREE.Mesh(new THREE.DodecahedronGeometry(r,0), mat([0x7c5d44,0x6b4f3a,0x8a6a4e][i%3])); b.position.set(x,hfn(x,z)+r*.4,z); b.rotation.set(R(0,3),R(0,3),0); world.add(b); addCircle(x,z,r*.85); }
+    for(let i=0;i<70;i++){ const x=R(-60,60), z=R(-70,75); if(Math.hypot(x,z+26)<12) continue; if(z>58 && Math.abs(x)<10) continue; if(Math.abs(x-Math.sin(z*.08)*6)<3 && z>-18) continue; const r=R(.8,2.6); const b=new THREE.Mesh(new THREE.DodecahedronGeometry(r,0), mat([0x7c5d44,0x6b4f3a,0x8a6a4e][i%3])); b.position.set(x,hfn(x,z)+r*.4,z); b.rotation.set(R(0,3),R(0,3),0); world.add(b); addCircle(x,z,r*.85); }
     // ---- natural cave (Ghar Thawr), entrance faces +z ----
     const CZ=-26, RX=3.2, RY=2.75, RZ=4.4, FL=-1.0, OW=1.2, OH=2.15;
     const y0=hfn(0,CZ), cave=new THREE.Group(); cave.position.set(0,y0+1.03,CZ); world.add(cave);
