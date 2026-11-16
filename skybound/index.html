@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKYBOUND — سكاي باوند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#f4c46b; --gold2:#ffe2a3; --ink:#0d1530; --cyan:#7fe7ff; --glass:rgba(10,18,40,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0d1530;font-family:'Tajawal',sans-serif;color:#fff}
+  #game{position:fixed;inset:0}
+  .hidden{display:none!important}
+
+  /* ---------- screens ---------- */
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;text-align:center;padding:24px}
+  #title{background:radial-gradient(ellipse at 50% 120%,rgba(255,190,120,.35),transparent 60%),linear-gradient(180deg,rgba(13,21,48,.75),rgba(13,21,48,.25) 60%,rgba(13,21,48,.7))}
+  .logo{font-family:'Cinzel',serif;font-weight:800;font-size:clamp(48px,10vw,120px);letter-spacing:.18em;
+    background:linear-gradient(180deg,#fff 10%,var(--gold2) 50%,var(--gold) 90%);-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 6px 30px rgba(244,196,107,.45));direction:ltr}
+  .tagline{font-size:clamp(18px,2.4vw,26px);margin-top:6px;color:#ffeccc;opacity:.95}
+  .chapter{margin-top:28px;font-size:15px;letter-spacing:.3em;color:var(--gold);opacity:.9}
+  .btns{display:flex;gap:16px;margin-top:34px;flex-wrap:wrap;justify-content:center}
+  .btn{font-family:inherit;font-size:19px;font-weight:700;padding:15px 30px;border-radius:999px;cursor:pointer;border:1.5px solid rgba(255,226,163,.7);
+    background:rgba(255,255,255,.08);color:#fff;backdrop-filter:blur(8px);transition:.25s}
+  .btn:hover{background:rgba(255,226,163,.2);transform:translateY(-2px)}
+  .btn.primary{background:linear-gradient(180deg,#ffd98a,#e9a948);color:#2a1a05;border-color:transparent;box-shadow:0 8px 30px rgba(233,169,72,.45)}
+  .hint{margin-top:26px;font-size:15px;color:#d8e2ff;opacity:.85;line-height:1.9;max-width:640px}
+  .hint b{color:var(--gold2)}
+  #camMsg{margin-top:14px;color:#ffb4a8;font-size:15px;min-height:22px}
+
+  #cine{background:linear-gradient(180deg,rgba(5,8,20,.55),rgba(5,8,20,.1) 40%,rgba(5,8,20,.65))}
+  #cineText{font-size:clamp(22px,3.2vw,36px);font-weight:500;line-height:1.8;max-width:900px;text-shadow:0 2px 20px rgba(0,0,0,.7);
+    opacity:0;transition:opacity 1.2s ease}
+  #cineText.show{opacity:1}
+  #skip{position:fixed;bottom:28px;left:28px;z-index:21;font-size:15px;padding:10px 20px}
+
+  #choice{background:rgba(5,6,15,.6);backdrop-filter:blur(3px)}
+  #choice h2{font-size:clamp(26px,3.5vw,40px);margin-bottom:10px}
+  #choice p{font-size:19px;color:#d8e2ff;margin-bottom:26px;max-width:640px;line-height:1.8}
+  .choiceCard{width:280px;padding:26px 22px;border-radius:22px;cursor:pointer;border:1.5px solid rgba(255,255,255,.25);background:var(--glass);transition:.25s;text-align:center}
+  .choiceCard:hover{transform:translateY(-4px);border-color:var(--gold)}
+  .choiceCard .ic{font-size:40px;margin-bottom:10px}
+  .choiceCard h3{font-size:22px;margin-bottom:8px}
+  .choiceCard span{font-size:15px;color:#c9d4f5;line-height:1.7}
+  .choiceCard.dark{border-color:rgba(176,140,255,.5)}
+  .choiceCard.dark:hover{border-color:#c4a6ff;box-shadow:0 0 40px rgba(160,110,255,.35)}
+
+  #ending{background:rgba(5,6,15,.72);backdrop-filter:blur(4px)}
+  #ending h2{font-size:clamp(30px,4.5vw,52px);margin-bottom:18px;color:var(--gold2)}
+  #ending p{font-size:clamp(18px,2.2vw,23px);line-height:2;max-width:760px;color:#e6ecff}
+  #ending .tbc{margin-top:30px;font-family:'Cinzel',serif;letter-spacing:.3em;color:var(--gold);font-size:18px}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+  .topbar{position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;gap:12px}
+  .gauge{background:var(--glass);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:8px 16px;min-width:108px;text-align:center;backdrop-filter:blur(6px)}
+  .gauge small{display:block;font-size:12px;color:#b9c6ee}
+  .gauge b{font-size:22px;font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
+  #arrowWrap{position:absolute;top:100px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px}
+  #arrow{width:46px;height:46px;transition:transform .12s linear;filter:drop-shadow(0 0 10px rgba(244,196,107,.8))}
+  #vhint{font-size:13px;color:var(--gold2);min-height:18px}
+  #targetLbl{font-size:13px;color:#e7edff;opacity:.85}
+
+  #dialog{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:min(720px,92vw);background:var(--glass);
+    border:1px solid rgba(255,226,163,.35);border-radius:18px;padding:14px 20px;backdrop-filter:blur(8px);opacity:0;transition:opacity .4s}
+  #dialog.show{opacity:1}
+  #dialog .who{font-size:13px;color:var(--gold);font-weight:700;margin-bottom:4px}
+  #dialog .txt{font-size:19px;line-height:1.7;min-height:30px}
+
+  #nav{position:absolute;bottom:28px;left:24px;width:250px;height:150px;border-radius:14px;overflow:hidden;
+    background:linear-gradient(180deg,#06231f,#031410);border:2px solid #2f5a52;box-shadow:inset 0 0 30px rgba(0,255,180,.15);font-family:monospace}
+  #nav .lbl{position:absolute;top:6px;right:10px;font-family:'Tajawal';font-size:11px;color:#6fd8b4;opacity:.8}
+  #navBody{position:absolute;inset:24px 12px 10px;color:#7dffcb;font-size:14px;line-height:1.6;text-shadow:0 0 6px rgba(125,255,203,.7);direction:rtl;font-family:'Tajawal',monospace}
+  #navBody .coord{direction:ltr;font-family:monospace;font-size:15px;color:#ffe08a;text-shadow:0 0 8px rgba(255,200,80,.8)}
+  #nav.alert{border-color:#b04a5a;animation:navPulse .5s infinite alternate}
+  @keyframes navPulse{to{box-shadow:inset 0 0 40px rgba(255,60,90,.35),0 0 25px rgba(255,60,90,.4)}}
+  #nav canvas{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none}
+  #nav.static canvas{opacity:1}
+
+  #camWrap{position:absolute;top:18px;left:18px;width:200px;height:150px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.25);background:#000}
+  #camWrap video,#camWrap canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  #camWrap .st{position:absolute;bottom:4px;right:8px;font-size:12px;color:#fff;text-shadow:0 1px 4px #000;transform:none}
+  #keysHint{position:absolute;top:18px;left:18px;font-size:13px;color:#d6e0ff;background:var(--glass);padding:8px 14px;border-radius:12px;line-height:1.7}
+
+  #toast{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:34px;font-weight:900;color:var(--gold2);
+    text-shadow:0 0 24px rgba(244,196,107,.9);opacity:0;transition:opacity .3s}
+
+  #glitch{position:fixed;inset:0;z-index:15;pointer-events:none;opacity:0;mix-blend-mode:screen;
+    background:repeating-linear-gradient(0deg,rgba(255,0,80,.12) 0 2px,transparent 2px 5px),repeating-linear-gradient(90deg,rgba(0,255,255,.08) 0 3px,transparent 3px 9px)}
+  #glitch.on{animation:glitchAnim .18s steps(2) infinite}
+  @keyframes glitchAnim{0%{opacity:.9;transform:translate(4px,-2px)}50%{opacity:.4;transform:translate(-6px,3px)}100%{opacity:.8;transform:translate(2px,1px)}}
+  body.shake #game{animation:shake .12s infinite}
+  @keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(3px,-2px)}50%{transform:translate(-3px,2px)}75%{transform:translate(2px,3px)}}
+  #flash{position:fixed;inset:0;background:#fff;opacity:0;z-index:14;pointer-events:none;transition:opacity .15s}
+  #loading{font-size:15px;color:#cbd6ff;margin-top:10px;min-height:20px}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="flash"></div>
+<div id="glitch"></div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div class="topbar">
+    <div class="gauge"><small>الارتفاع (م)</small><b id="hAlt">0</b></div>
+    <div class="gauge"><small>السرعة (عقدة)</small><b id="hSpd">0</b></div>
+    <div class="gauge"><small>الاتجاه</small><b id="hHdg">000°</b></div>
+    <div class="gauge"><small id="hGoalLbl">الحلقات</small><b id="hGoal">0/10</b></div>
+  </div>
+  <div id="arrowWrap">
+    <svg id="arrow" viewBox="0 0 40 40"><path d="M20 3 L33 30 L20 23 L7 30 Z" fill="#ffe2a3" stroke="#e9a948" stroke-width="2" stroke-linejoin="round"/></svg>
+    <div id="vhint"></div>
+    <div id="targetLbl"></div>
+  </div>
+  <div id="toast"></div>
+  <div id="dialog"><div class="who" id="who">الكابتن هالة — برج الأكاديمية</div><div class="txt" id="dtxt"></div></div>
+  <div id="nav"><div class="lbl">شاشة الملاحة</div><div id="navBody">النظام جاهز</div><canvas id="navStatic" width="250" height="150"></canvas></div>
+  <div id="camWrap" class="hidden"><video id="video" playsinline muted></video><canvas id="camCanvas"></canvas><div class="st" id="camSt">...</div></div>
+  <div id="keysHint" class="hidden">← → للانعطاف &nbsp;•&nbsp; ↑ ↓ للصعود والهبوط</div>
+</div>
+
+<!-- TITLE -->
+<div id="title" class="screen">
+  <div class="logo">SKYBOUND</div>
+  <div class="tagline">حيث يلتقي الواقعُ بالخيال</div>
+  <div class="chapter">الفصل الأول · الرحلة 001</div>
+  <div class="btns">
+    <button class="btn primary" id="btnCam">✋ العبي بيديك (الكاميرا)</button>
+    <button class="btn" id="btnKeys">⌨️ العبي بلوحة المفاتيح</button>
+  </div>
+  <div id="loading"></div>
+  <div id="camMsg"></div>
+  <div class="hint">
+    يداكِ الحقيقيتان هما مقود الطائرة: <b>أمِيلي يديكِ</b> مثل المقود للانعطاف، <b>ارفعيهما</b> للصعود و<b>اخفضيهما</b> للهبوط.<br>
+    يكفي أن تقفي أمام الكاميرا وتمسكي مقودًا خياليًا.
+  </div>
+</div>
+
+<!-- CINEMATIC -->
+<div id="cine" class="screen hidden"><div id="cineText"></div></div>
+<button id="skip" class="btn hidden">تخطّي ◀</button>
+
+<!-- CHOICE -->
+<div id="choice" class="screen hidden">
+  <h2>«الرحلة 001... لقد عدنا»</h2>
+  <p>إحداثيات لمطارٍ لا يوجد على أي خريطة. والاختبار لم ينتهِ بعد. ماذا ستفعل رينا؟</p>
+  <div class="btns">
+    <div class="choiceCard" id="chA"><div class="ic">🎓</div><h3>أكملي الاختبار</h3><span>تجاهلي الرسالة، واثبتي أنكِ تستحقين أن تكوني كابتن.</span></div>
+    <div class="choiceCard dark" id="chB"><div class="ic">🧭</div><h3>اتبعي الإحداثيات</h3><span>اخرجي عن المسار... نحو مكانٍ لم يعد منه أحد منذ 200 عام.</span></div>
+  </div>
+</div>
+
+<!-- ENDING -->
+<div id="ending" class="screen hidden">
+  <h2 id="endTitle"></h2>
+  <p id="endText"></p>
+  <div class="tbc">TO BE CONTINUED · يُتبع</div>
+  <div class="btns"><button class="btn primary" id="btnAgain">العبي مرة أخرى</button></div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* =========================================================
+   SKYBOUND — Chapter 1 prototype
+   Fantasy: the sky world of Aurelia.  Reality: the player's own hands (webcam yoke).
+   ========================================================= */
+
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp = (a,b,t)=>a+(b-a)*t;
+const wrapAngle = a => { while(a>Math.PI)a-=Math.PI*2; while(a<-Math.PI)a+=Math.PI*2; return a; };
+function rng(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const R = rng(1189);
+const rand = (a,b)=>a+(b-a)*R();
+
+/* ---------------- renderer / scene ---------------- */
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+$('game').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.5, 6000);
+const FOG_WARM = new THREE.Color(0xf2c9a8), FOG_DARK = new THREE.Color(0x4a3d63);
+scene.fog = new THREE.Fog(FOG_WARM.clone(), 180, 1500);
+
+// Sky dome
+const skyUniforms = {
+  top:{value:new THREE.Color(0x2a4b8d)}, mid:{value:new THREE.Color(0x8fb4e8)},
+  horizon:{value:new THREE.Color(0xffc896)}, sunDir:{value:new THREE.Vector3(-0.5,0.18,-0.85).normalize()},
+  sunCol:{value:new THREE.Color(0xfff0c8)}
+};
+const SKY_WARM = {top:0x2a4b8d, mid:0x8fb4e8, horizon:0xffc896, sun:0xfff0c8};
+const SKY_DARK = {top:0x120c24, mid:0x3b2d5c, horizon:0x7a5a86, sun:0xb59cff};
+const sky = new THREE.Mesh(new THREE.SphereGeometry(4000,32,16), new THREE.ShaderMaterial({
+  side:THREE.BackSide, depthWrite:false, fog:false, uniforms:skyUniforms,
+  vertexShader:`varying vec3 vDir; void main(){ vDir=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader:`uniform vec3 top,mid,horizon,sunDir,sunCol; varying vec3 vDir;
+    void main(){ float h=vDir.y; vec3 c = h>0.0 ? mix(mix(horizon,mid,smoothstep(0.0,0.25,h)),top,smoothstep(0.25,0.9,h)) : mix(horizon,horizon*0.8,smoothstep(0.0,-0.3,h));
+      float s=max(dot(vDir,sunDir),0.0); c+=sunCol*(pow(s,600.0)*2.0+pow(s,12.0)*0.35);
+      gl_FragColor=vec4(c,1.); }`
+}));
+scene.add(sky);
+
+const hemi = new THREE.HemisphereLight(0xcfe3ff, 0xf0b98a, 0.9); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe2b8, 2.2); sun.position.set(-300,200,-500); scene.add(sun);
+
+/* ---------------- cloud texture & clouds ---------------- */
+function cloudTexture(){
+  const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d');
+  for(let i=0;i<14;i++){ const x=64+rand(-28,28), y=64+rand(-18,18), r=rand(18,40);
+    const gr=g.createRadialGradient(x,y,0,x,y,r); gr.addColorStop(0,'rgba(255,255,255,.55)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=gr; g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill(); }
+  const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t;
+}
+const cloudTex = cloudTexture();
+const cloudMats = [];
+function addCloud(x,y,z,s,tint=0xffffff,op=0.9){
+  const m=new THREE.SpriteMaterial({map:cloudTex,color:tint,transparent:true,opacity:op,depthWrite:false});
+  cloudMats.push(m);
+  const sp=new THREE.Sprite(m); sp.position.set(x,y,z); sp.scale.set(s,s*0.55,1); scene.add(sp); return sp;
+}
+// sea of clouds below
+for(let i=0;i<420;i++){ const a=rand(0,Math.PI*2), d=Math.sqrt(R())*1900; addCloud(Math.cos(a)*d, rand(-70,-30), Math.sin(a)*d, rand(120,260), 0xfff3ea, 0.95); }
+// drifting mid clouds
+for(let i=0;i<110;i++){ const a=rand(0,Math.PI*2), d=rand(120,1700); addCloud(Math.cos(a)*d, rand(20,200), Math.sin(a)*d, rand(40,110), 0xffffff, 0.55); }
+
+/* ---------------- islands ---------------- */
+const mat = (c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.85,flatShading:true,...o});
+function makeIsland(r, {grass=0x86b86a, rock=0x8b735c, seed=1}={}){
+  const g=new THREE.Group(); const lr=rng(seed);
+  const top=new THREE.Mesh(new THREE.CylinderGeometry(r,r*0.93,3,32),mat(grass)); g.add(top);
+  const coneH=r*1.25;
+  const geo=new THREE.ConeGeometry(r*0.93,coneH,28,6); const p=geo.attributes.position;
+  for(let i=0;i<p.count;i++){ const y=p.getY(i); if(y<coneH/2-0.01){ const k=1+(lr()-.5)*0.35; p.setX(i,p.getX(i)*k); p.setZ(i,p.getZ(i)*k); p.setY(i,y+(lr()-.5)*r*0.08);} }
+  geo.computeVertexNormals();
+  const cone=new THREE.Mesh(geo,mat(rock)); cone.rotation.x=Math.PI; cone.position.y=-1.5-coneH/2; g.add(cone);
+  return g;
+}
+function addTree(parent,x,z,s=1){
+  const t=new THREE.Mesh(new THREE.ConeGeometry(2.2*s,6*s,6),mat(0x4f8a4a)); t.position.set(x,1.5+3*s,z); parent.add(t);
+}
+function addBuilding(parent,x,z,w,h,d,{roof=0xd9a441,wall=0xf4ece0}={}){
+  const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(wall)); b.position.set(x,1.5+h/2,z); parent.add(b);
+  const rf=new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*0.75,h*0.45,4),mat(roof,{metalness:.3})); rf.rotation.y=Math.PI/4; rf.position.set(x,1.5+h+h*0.22,z); parent.add(rf);
+  const win=new THREE.Mesh(new THREE.PlaneGeometry(w*0.7,h*0.5),new THREE.MeshBasicMaterial({color:0xffd27a})); win.position.set(x,1.5+h*0.55,z+d/2+0.05); parent.add(win);
+}
+function addRunway(parent,len,w=14,{lights=0xffe08a,broken=false}={}){
+  const rw=new THREE.Mesh(new THREE.PlaneGeometry(w,len),mat(broken?0x2b2730:0x3a3f4a)); rw.rotation.x=-Math.PI/2; rw.position.y=1.55; parent.add(rw);
+  for(let z=-len/2+4; z<len/2; z+=12){
+    const dash=new THREE.Mesh(new THREE.PlaneGeometry(0.8,5),new THREE.MeshBasicMaterial({color:broken?0x55505a:0xffffff})); dash.rotation.x=-Math.PI/2; dash.position.set(0,1.58,z); parent.add(dash);
+    if(!broken || R()>.6) for(const sx of [-1,1]){ const l=new THREE.Mesh(new THREE.SphereGeometry(0.45,6,6),new THREE.MeshBasicMaterial({color:lights})); l.position.set(sx*(w/2+0.8),1.9,z); parent.add(l); }
+  }
+}
+
+// Evora — the sky capital
+const EVORA_TOP = 1.5;
+const evora = makeIsland(78,{seed:7}); scene.add(evora);
+addRunway(evora,130);
+const evoraR = rng(31);
+for(let i=0;i<26;i++){ const side=evoraR()<.5?-1:1; const x=side*(16+evoraR()*44), z=-55+evoraR()*110;
+  if(Math.hypot(x,z)<70) addBuilding(evora,x,z,4+evoraR()*7,6+evoraR()*16,4+evoraR()*7); }
+for(let i=0;i<30;i++){ const a=evoraR()*Math.PI*2, d=50+evoraR()*24; addTree(evora,Math.cos(a)*d,Math.sin(a)*d,0.8+evoraR()*.6); }
+// academy tower
+{ const t=new THREE.Mesh(new THREE.CylinderGeometry(2.5,3.5,34,10),mat(0xf6efe4)); t.position.set(-24,1.5+17,20); evora.add(t);
+  const cab=new THREE.Mesh(new THREE.CylinderGeometry(6,4.5,5,10),mat(0x7fd3ff,{emissive:0x2b6c8a,emissiveIntensity:.6,metalness:.4})); cab.position.set(-24,1.5+36,20); evora.add(cab); }
+
+// six other nations on the horizon
+const nations=[];
+for(let i=0;i<6;i++){ const a=(i/6)*Math.PI*2+0.4, d=rand(950,1500);
+  const isl=makeIsland(rand(70,140),{seed:100+i, grass:[0x86b86a,0xc9b27a,0x9cc7b8,0xb7a3d6,0xe0c08c,0x7fae8e][i]});
+  isl.position.set(Math.cos(a)*d, rand(-10,90), Math.sin(a)*d); scene.add(isl); nations.push(isl);
+  for(let k=0;k<10;k++) addBuilding(isl,rand(-40,40),rand(-40,40),rand(5,10),rand(8,30),rand(5,10));
+}
+
+/* ---------------- the aircraft ---------------- */
+const plane = new THREE.Group();
+{
+  const white=mat(0xf7f4ee,{roughness:.4,metalness:.2,flatShading:false}), gold=mat(0xe2a94a,{roughness:.35,metalness:.6,flatShading:false});
+  const body=new THREE.Mesh(new THREE.CapsuleGeometry(1.1,7,6,14),white); body.rotation.x=Math.PI/2; plane.add(body);
+  const glass=new THREE.Mesh(new THREE.SphereGeometry(0.95,14,10,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0x6fd6ff,emissive:0x1d6a8a,roughness:.1,metalness:.6}));
+  glass.position.set(0,0.45,-3); glass.scale.set(0.8,0.7,1.4); plane.add(glass);
+  const wing=new THREE.Mesh(new THREE.BoxGeometry(13,0.25,2.4),white); wing.position.set(0,-0.1,0); plane.add(wing);
+  for(const s of [-1,1]){ const tip=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.4,1.6),gold); tip.position.set(s*6.5,0.5,0.3); plane.add(tip);
+    const eng=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.55,2.2,10),gold); eng.rotation.x=Math.PI/2; eng.position.set(s*3,-0.6,-0.3); plane.add(eng); }
+  const tailW=new THREE.Mesh(new THREE.BoxGeometry(5,0.2,1.3),white); tailW.position.set(0,0.2,4); plane.add(tailW);
+  const fin=new THREE.Mesh(new THREE.BoxGeometry(0.22,2.4,1.6),gold); fin.position.set(0,1.3,4); plane.add(fin);
+  const stripe=new THREE.Mesh(new THREE.CylinderGeometry(1.12,1.12,0.5,14,1,true),gold); stripe.rotation.x=Math.PI/2; stripe.position.z=1.5; plane.add(stripe);
+}
+plane.rotation.order='YXZ';
+scene.add(plane);
+// engine glow trail
+const trailMat = new THREE.SpriteMaterial({map:cloudTex,color:0xffffff,transparent:true,opacity:0,depthWrite:false});
+const trail=[]; for(let i=0;i<26;i++){ const s=new THREE.Sprite(trailMat.clone()); s.scale.set(2,2,1); scene.add(s); trail.push({s,life:0}); }
+let trailIdx=0, trailTimer=0;
+
+/* ---------------- rings (sky-corridor gates) ---------------- */
+const RING_R = 14;
+const rings=[];
+const ringGeo = new THREE.TorusGeometry(RING_R,1.1,10,48);
+{
+  let p=new THREE.Vector3(0,30,-230), h=0;
+  for(let i=0;i<10;i++){
+    const m=new THREE.Mesh(ringGeo,new THREE.MeshStandardMaterial({color:0xffd27a,emissive:0xffb54a,emissiveIntensity:1.2,metalness:.5,roughness:.3}));
+    m.position.copy(p); m.rotation.y=h; scene.add(m);
+    const normal=new THREE.Vector3(-Math.sin(h),0,-Math.cos(h));
+    rings.push({mesh:m,normal,prevD:null,done:false,passed:false});
+    h += (i===4? 0.15 : rand(-0.45,0.45));
+    p = p.clone().add(new THREE.Vector3(-Math.sin(h),0,-Math.cos(h)).multiplyScalar(165));
+    p.y = clamp(p.y+rand(-14,22),25,150);
+  }
+}
+// academy landing island after the final ring
+const lastRing = rings[rings.length-1];
+const academy = makeIsland(55,{seed:55, grass:0x9cc77a});
+academy.position.copy(lastRing.mesh.position).add(lastRing.normal.clone().multiplyScalar(320)); academy.position.y=lastRing.mesh.position.y-35;
+academy.rotation.y = lastRing.mesh.rotation.y;
+addRunway(academy,95,16,{lights:0x7fe7ff});
+for(let i=0;i<6;i++) addBuilding(academy,(i%2?1:-1)*rand(18,36),rand(-30,30),rand(5,8),rand(6,12),rand(5,8),{roof:0x3d7fc4});
+const landingBeacon = new THREE.Mesh(new THREE.CylinderGeometry(6,6,400,16,1,true),new THREE.MeshBasicMaterial({color:0x7fe7ff,transparent:true,opacity:.12,depthWrite:false,side:THREE.DoubleSide}));
+landingBeacon.position.y=200; academy.add(landingBeacon); scene.add(academy); academy.visible=false;
+
+// the vanished nation (hidden at start)
+const lost = makeIsland(95,{seed:404, grass:0x4b4658, rock:0x3b3442});
+addRunway(lost,120,16,{lights:0x9b7bff,broken:true});
+const lostTowerLight = new THREE.MeshStandardMaterial({color:0x222222,emissive:0x000000});
+{ const t=new THREE.Mesh(new THREE.CylinderGeometry(3,4.5,46,8),mat(0x3c3846)); t.position.set(30,1.5+23,-10); lost.add(t);
+  const cab=new THREE.Mesh(new THREE.CylinderGeometry(7,5,6,8),lostTowerLight); cab.position.set(30,1.5+49,-10); lost.add(cab);
+  for(let i=0;i<14;i++){ const b=new THREE.Mesh(new THREE.BoxGeometry(rand(4,9),rand(3,18),rand(4,9)),mat(0x4a4553)); b.position.set(rand(-70,70),3,rand(-70,70)); b.rotation.z=rand(-.2,.2); if(Math.abs(b.position.x)>12) lost.add(b); } }
+const lostLight = new THREE.PointLight(0xb89cff,0,900,1.2); lostLight.position.set(30,60,-10); lost.add(lostLight);
+lost.visible=false; scene.add(lost);
+const stormClouds=[];
+
+/* ---------------- audio ---------------- */
+let AC=null, master, windGain, windFilter, padGain, padOscs=[];
+function initAudio(){
+  if(AC) return; try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return; }
+  master=AC.createGain(); master.gain.value=.8; master.connect(AC.destination);
+  const buf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate); const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const n=AC.createBufferSource(); n.buffer=buf; n.loop=true;
+  windFilter=AC.createBiquadFilter(); windFilter.type='bandpass'; windFilter.frequency.value=400; windFilter.Q.value=.6;
+  windGain=AC.createGain(); windGain.gain.value=.05; n.connect(windFilter).connect(windGain).connect(master); n.start();
+  padGain=AC.createGain(); padGain.gain.value=.035; padGain.connect(master);
+  [220,277.18,329.63,440].forEach(f=>{ const o=AC.createOscillator(); o.type='sine'; o.frequency.value=f; const g=AC.createGain(); g.gain.value=.25;
+    const lfo=AC.createOscillator(); lfo.frequency.value=.07+Math.random()*.1; const lg=AC.createGain(); lg.gain.value=.15; lfo.connect(lg).connect(g.gain); lfo.start();
+    o.connect(g).connect(padGain); o.start(); padOscs.push(o); });
+}
+function setPad(freqs){ if(!AC) return; padOscs.forEach((o,i)=>o.frequency.setTargetAtTime(freqs[i],AC.currentTime,1.5)); }
+function chime(){ if(!AC) return; [880,1318.5,1760].forEach((f,i)=>{ const o=AC.createOscillator(), g=AC.createGain(); o.frequency.value=f; o.type='triangle';
+  const t=AC.currentTime+i*.07; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.12,t+.02); g.gain.exponentialRampToValueAtTime(.001,t+.9); o.connect(g).connect(master); o.start(t); o.stop(t+1); }); }
+function bloop(){ if(!AC) return; const o=AC.createOscillator(), g=AC.createGain(); o.frequency.setValueAtTime(300,AC.currentTime); o.frequency.exponentialRampToValueAtTime(120,AC.currentTime+.35);
+  g.gain.setValueAtTime(.1,AC.currentTime); g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.4); o.connect(g).connect(master); o.start(); o.stop(AC.currentTime+.45); }
+function glitchSound(dur=0.25){ if(!AC) return; for(let i=0;i<6;i++){ const o=AC.createOscillator(), g=AC.createGain(); o.type=Math.random()<.5?'square':'sawtooth';
+  const t=AC.currentTime+i*dur/6; o.frequency.setValueAtTime(rand(80,1800),t); g.gain.setValueAtTime(.06,t); g.gain.setValueAtTime(0,t+dur/6); o.connect(g).connect(master); o.start(t); o.stop(t+dur/6+.01); } }
+function thunder(){ if(!AC) return; const buf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate), d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
+  const s=AC.createBufferSource(); s.buffer=buf; const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=220; const g=AC.createGain(); g.gain.value=.5; s.connect(f).connect(g).connect(master); s.start(); }
+
+/* ---------------- input: keyboard ---------------- */
+const keys={};
+addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code.startsWith('Arrow')) e.preventDefault(); });
+addEventListener('keyup',e=>{ keys[e.code]=false; });
+function keyInput(){
+  let s=0,c=0;
+  if(keys.ArrowLeft||keys.KeyA) s-=1; if(keys.ArrowRight||keys.KeyD) s+=1;
+  if(keys.ArrowUp||keys.KeyW) c+=1; if(keys.ArrowDown||keys.KeyS) c-=1;
+  return {s,c,active:s!==0||c!==0};
+}
+
+/* ---------------- input: hands (reality) ---------------- */
+let handMode=false, handLandmarker=null, video=$('video'), camCtx=$('camCanvas').getContext('2d');
+const handIn={s:0,c:0,seen:false}; let lastVideoTime=-1;
+async function initHands(){
+  $('loading').textContent='جارٍ تشغيل الكاميرا وتحميل نموذج تتبّع اليد...';
+  const stream = await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'}});
+  video.srcObject=stream; await video.play();
+  const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+  const fileset = await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+  handLandmarker = await vision.HandLandmarker.createFromOptions(fileset,{
+    baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},
+    runningMode:'VIDEO', numHands:2 });
+  $('camCanvas').width=320; $('camCanvas').height=240;
+  handMode=true;
+}
+const HAND_LINKS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+function updateHands(){
+  if(!handMode||!handLandmarker||video.readyState<2) return;
+  if(video.currentTime===lastVideoTime) return; lastVideoTime=video.currentTime;
+  const res=handLandmarker.detectForVideo(video,performance.now());
+  const W=320,H=240; camCtx.clearRect(0,0,W,H);
+  const hands=res.landmarks||[];
+  for(const lm of hands){ camCtx.strokeStyle='#ffe2a3'; camCtx.lineWidth=2.5; camCtx.beginPath();
+    for(const [a,b] of HAND_LINKS){ camCtx.moveTo(lm[a].x*W,lm[a].y*H); camCtx.lineTo(lm[b].x*W,lm[b].y*H); } camCtx.stroke();
+    camCtx.fillStyle='#7fe7ff'; for(const p of lm){ camCtx.beginPath(); camCtx.arc(p.x*W,p.y*H,2.5,0,7); camCtx.fill(); } }
+  let ts=0, tc=0;
+  if(hands.length>=2){
+    const pts=hands.slice(0,2).map(lm=>({x:1-lm[9].x, y:lm[9].y})).sort((a,b)=>a.x-b.x); // mirrored: left hand first
+    const ang=Math.atan2(pts[1].y-pts[0].y, pts[1].x-pts[0].x);   // right hand lower → turn right
+    ts=clamp(ang/0.45,-1,1); tc=clamp((0.5-(pts[0].y+pts[1].y)/2)/0.2,-1,1);
+    $('camSt').textContent='✋✋ المقود جاهز';
+  } else if(hands.length===1){
+    const p={x:1-hands[0][9].x,y:hands[0][9].y};
+    ts=clamp((p.x-0.5)/0.22,-1,1); tc=clamp((0.5-p.y)/0.2,-1,1);
+    $('camSt').textContent='✋ يد واحدة';
+  } else $('camSt').textContent='لا أرى يديكِ';
+  const dz=v=>Math.abs(v)<0.12?0:v;
+  handIn.s=lerp(handIn.s,dz(ts),0.3); handIn.c=lerp(handIn.c,dz(tc),0.3); handIn.seen=hands.length>0;
+}
+
+/* ---------------- UI helpers ---------------- */
+let typeTimer=null;
+function say(text, who='الكابتن هالة — برج الأكاديمية', hold=6000){
+  $('who').textContent=who; const el=$('dtxt'); el.textContent=''; $('dialog').classList.add('show');
+  clearInterval(typeTimer); let i=0; typeTimer=setInterval(()=>{ el.textContent=text.slice(0,++i); if(i>=text.length) clearInterval(typeTimer); },28);
+  clearTimeout(say._h); if(hold) say._h=setTimeout(()=>$('dialog').classList.remove('show'),hold);
+}
+function toast(t,col){ const el=$('toast'); el.textContent=t; el.style.color=col||''; el.style.opacity=1; clearTimeout(toast._h); toast._h=setTimeout(()=>el.style.opacity=0,900); }
+function nav(html,alert=false){ $('navBody').innerHTML=html; $('nav').classList.toggle('alert',alert); }
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// nav static noise
+const nsCtx=$('navStatic').getContext('2d');
+function drawStatic(){ const img=nsCtx.createImageData(250,150); for(let i=0;i<img.data.length;i+=4){ const v=Math.random()*255; img.data[i]=v*.4; img.data[i+1]=v; img.data[i+2]=v*.8; img.data[i+3]=200; } nsCtx.putImageData(img,0,0); }
+
+/* ---------------- game state ---------------- */
+const S={
+  phase:'title', yaw:0, pos:new THREE.Vector3(0,EVORA_TOP+1.4,52), speed:0, climb:0, steer:0, onGround:true,
+  ringIdx:0, ringsHit:0, timeScale:1, branch:null, cineAngle:0, darkness:0, lightningT:3, target:null, ended:false
+};
+const fwd = ()=>new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));
+
+/* ---------------- flow ---------------- */
+$('btnCam').onclick=async()=>{
+  initAudio(); $('btnCam').disabled=$('btnKeys').disabled=true;
+  try{ await initHands(); $('camWrap').classList.remove('hidden'); startCinematic(); }
+  catch(e){ console.warn(e); $('loading').textContent=''; $('camMsg').textContent='تعذّر تشغيل الكاميرا هنا، سنلعب بلوحة المفاتيح.';
+    await sleep(1600); $('keysHint').classList.remove('hidden'); startCinematic(); }
+};
+$('btnKeys').onclick=()=>{ initAudio(); $('keysHint').classList.remove('hidden'); startCinematic(); };
+$('btnAgain').onclick=()=>location.reload();
+
+const CINE=[
+  'في عالمٍ يُسمّى <b style="color:#ffe2a3">أوريليا</b>...',
+  'تطفو سبعُ دولٍ فوق السحاب،<br>تربط بينها ممراتٌ جوية لا تعبرها الطائرات العادية.',
+  'قبل مئتي عام...<br>اختفت دولةٌ كاملة من خرائط العالم.',
+  'ولم يَعُد منها أحد.',
+  'في العاصمة الجوية <b style="color:#ffe2a3">إيفورا</b>، تحلم <b style="color:#ffe2a3">رينا</b> — ابنة الثامنة عشرة —<br>أن تصبح كابتن في أكبر شركة طيران في العالم.',
+  'واليوم... اختبارها الأول.'
+];
+let cineSkip=false;
+async function startCinematic(){
+  $('title').classList.add('hidden'); $('cine').classList.remove('hidden'); $('skip').classList.remove('hidden');
+  S.phase='cine';
+  for(let i=0;i<CINE.length && !cineSkip;i++){
+    $('cineText').innerHTML=CINE[i]; $('cineText').classList.add('show');
+    if(i===2){ /* hint of the lost nation */ glitchSound(.15); }
+    for(let t=0;t<42 && !cineSkip;t++) await sleep(100);
+    $('cineText').classList.remove('show'); for(let t=0;t<10 && !cineSkip;t++) await sleep(100);
+  }
+  startTest();
+}
+$('skip').onclick=()=>{ cineSkip=true; };
+
+function startTest(){
+  if(S.phase!=='cine') return;
+  $('cine').classList.add('hidden'); $('skip').classList.add('hidden'); $('hud').classList.remove('hidden');
+  S.phase='takeoff';
+  nav('الرحلة: <b>اختبار-01</b><br>المسار: ممر الأكاديمية<br>الحالة: جاهزة للإقلاع');
+  say('رينا، هنا برج الأكاديمية. المحركات تعمل والسرعة ترتفع... استعدي.',undefined,0);
+}
+
+/* ---------------- glitch event ---------------- */
+async function runGlitch(){
+  S.phase='glitch'; S.timeScale=0.25;
+  document.body.classList.add('shake'); $('glitch').classList.add('on'); glitchSound(.4);
+  $('nav').classList.add('static'); let st=setInterval(drawStatic,60);
+  say('رينا؟ رينا! الإشارة تنقطع... ما الذي يحدث في قمرتك؟',undefined,0);
+  await sleep(1600);
+  document.body.classList.remove('shake'); $('glitch').classList.remove('on');
+  clearInterval(st); $('nav').classList.remove('static');
+  nav('<span style="color:#ff8fa0">⚠ وجهة غير معروفة</span><br><span class="coord">N 47°13\'09" · E 001°00\'01"</span><br>مطار: <b>غير موجود على الخريطة</b>',true);
+  glitchSound(.2); await sleep(1500);
+  const msg='الرحلة 001... لقد عدنا';
+  for(let i=1;i<=msg.length;i++){ nav(`<span class="coord">N 47°13'09" · E 001°00'01"</span><br><br><b style="font-size:18px;color:#ffe08a">${msg.slice(0,i)}</b>`,true); await sleep(85); }
+  $('dialog').classList.remove('show');
+  await sleep(1400);
+  S.timeScale=0; S.phase='choice'; $('choice').classList.remove('hidden');
+}
+$('chA').onclick=()=>{
+  $('choice').classList.add('hidden'); S.branch='A'; S.phase='rings'; S.timeScale=1;
+  nav('الرحلة: <b>اختبار-01</b><br>⚠ إحداثيات مجهولة محفوظة<br><span class="coord">N 47°13\'09" · E 001°00\'01"</span>');
+  say('عاد الاتصال! لا أعرف ما كان ذلك... أكملي الاختبار يا رينا. ما زالت أمامك خمس بوابات.');
+};
+$('chB').onclick=()=>{
+  $('choice').classList.add('hidden'); S.branch='B'; S.phase='follow'; S.timeScale=1;
+  rings.forEach(r=>{ if(!r.done) r.mesh.visible=false; });
+  // place the vanished nation far to the side, behind a storm wall
+  const side=new THREE.Vector3(-Math.cos(S.yaw),0,Math.sin(S.yaw));      // to the left
+  lost.position.copy(S.pos).add(side.multiplyScalar(950)).add(fwd().multiplyScalar(300)); lost.position.y=S.pos.y-40;
+  lost.visible=true;
+  const dir=lost.position.clone().sub(S.pos).setY(0).normalize();
+  for(let i=0;i<70;i++){ const p=S.pos.clone().add(dir.clone().multiplyScalar(rand(380,620)));
+    p.add(new THREE.Vector3(-dir.z,0,dir.x).multiplyScalar(rand(-260,260))); p.y=S.pos.y+rand(-80,80);
+    stormClouds.push(addCloud(p.x,p.y,p.z,rand(90,170),0x5c4d78,0.85)); }
+  setPad([196,233.08,293.66,349.23]);
+  say('رينا! ارجعي إلى المسار فورًا! هذه المنطقة محظورة منذ...',undefined,4000);
+  setTimeout(()=>{ glitchSound(.3); say('...ششش... رينا... ششش...','— الإشارة تنقطع —',3000); },4500);
+};
+
+function finish(kind){
+  S.phase='end';
+  if(kind==='A'){
+    $('endTitle').textContent='نجحتِ في الاختبار';
+    $('endText').innerHTML=`هبطت رينا بسلام على مدرج الأكاديمية، وصفّق لها الجميع. اجتازت ${S.ringsHit} من 10 بوابات.<br>لكنها حين أطفأت المحركات... بقيت الإحداثيات على الشاشة.<br><b style="color:#ffe08a">تومض. وتنتظر.</b>`;
+  } else {
+    $('endTitle').textContent='مطارٌ لا وجود له';
+    $('endText').innerHTML='خلف جدار العاصفة، ظهرت جزيرةٌ لا تعرفها أي خريطة.<br>مدرجٌ قديم، وبرج مراقبة مهجور...<br><b style="color:#c9b3ff">وفجأة، أُضيء ضوء البرج لأول مرة منذ مئتي عام.</b>';
+  }
+  setTimeout(()=>$('ending').classList.remove('hidden'), kind==='B'?3200:1500);
+}
+
+/* ---------------- main loop ---------------- */
+const clock=new THREE.Clock();
+const camPos=new THREE.Vector3(0,40,140);
+let praise=['ممتاز!','دقيق جدًا!','رائع يا رينا!','ثبات مثالي!'];
+
+function update(dt){
+  // ----- cinematic camera -----
+  if(S.phase==='title'||S.phase==='cine'){
+    S.cineAngle+=dt*0.07;
+    camera.position.set(Math.sin(S.cineAngle)*190, 70+Math.sin(S.cineAngle*0.7)*12, Math.cos(S.cineAngle)*190);
+    camera.lookAt(0,10,0);
+    plane.position.copy(S.pos); plane.rotation.set(0,0,0);
+    return;
+  }
+  const sdt = dt*S.timeScale;
+
+  // ----- input -----
+  updateHands();
+  const k=keyInput();
+  let ts=0, tc=0;
+  if(k.active){ ts=k.s; tc=k.c; } else if(handMode){ ts=handIn.s; tc=handIn.c; }
+  const frozen = S.phase==='choice'||S.phase==='end'||S.phase==='landed'||S.phase==='arrive';
+  if(frozen){ ts=0; tc=0; }
+  S.steer=lerp(S.steer,ts,1-Math.exp(-6*dt)); S.climb=lerp(S.climb,tc,1-Math.exp(-6*dt));
+
+  // ----- flight -----
+  if(S.phase==='takeoff'){
+    S.speed=Math.min(S.speed+14*sdt,48);
+    S.pos.add(fwd().multiplyScalar(S.speed*sdt));
+    if(S.speed>32 && !S._rotateCue){ S._rotateCue=true; say(handMode?'السرعة كافية! ارفعي يديكِ للأعلى الآن للإقلاع ⬆':'السرعة كافية! اضغطي السهم ↑ للإقلاع الآن ⬆',undefined,0); }
+    const runwayEnd = S.pos.z < -60;
+    if((S.speed>32 && S.climb>0.3) || runwayEnd){
+      S.phase='rings'; S.onGround=false; S.climb=Math.max(S.climb,0.6);
+      say(runwayEnd?'أقلعتِ في آخر لحظة! الآن اعبري البوابات الذهبية، هي مداخل الممر الجوي. اتبعي السهم.':'إقلاع جميل! الآن اعبري البوابات الذهبية، هي مداخل الممر الجوي. اتبعي السهم.');
+      academy.visible=true;
+    }
+  } else if(S.phase!=='landed' && S.phase!=='arrive' && S.phase!=='end'){
+    S.speed=lerp(S.speed, S.phase==='landing'?34:46, 1-Math.exp(-1*sdt));
+    S.yaw -= S.steer*0.85*sdt;
+    S.pos.add(fwd().multiplyScalar(S.speed*sdt));
+    S.pos.y = clamp(S.pos.y + S.climb*26*sdt, 6, 420);
+  } else if(S.phase==='landed'){
+    S.speed=Math.max(0,S.speed-18*dt); S.pos.add(fwd().multiplyScalar(S.speed*dt));
+  } else if(S.phase==='arrive'){
+    S.speed=lerp(S.speed,14,1-Math.exp(-1.5*dt)); S.pos.add(fwd().multiplyScalar(S.speed*dt));
+  }
+
+  plane.position.copy(S.pos);
+  plane.rotation.y=S.yaw;
+  plane.rotation.x=lerp(plane.rotation.x, S.onGround?0:S.climb*0.38, 1-Math.exp(-5*dt));
+  plane.rotation.z=lerp(plane.rotation.z, S.onGround?0:-S.steer*0.7, 1-Math.exp(-5*dt));
+
+  // trail
+  trailTimer-=dt; if(!S.onGround && trailTimer<=0){ trailTimer=0.05; const t=trail[trailIdx++%trail.length];
+    t.s.position.copy(S.pos).add(fwd().multiplyScalar(-5)); t.life=1; }
+  for(const t of trail){ if(t.life>0){ t.life-=dt*1.4; t.s.material.opacity=Math.max(0,t.life)*0.45; const sc=2+(1-t.life)*5; t.s.scale.set(sc,sc,1);} }
+
+  // ----- chase camera -----
+  const f=fwd();
+  const want=S.pos.clone().add(f.clone().multiplyScalar(-30)).add(new THREE.Vector3(0,9+S.climb*-3,0));
+  camPos.lerp(want,1-Math.exp(-4*dt)); camera.position.copy(camPos);
+  camera.lookAt(S.pos.clone().add(f.multiplyScalar(25)).add(new THREE.Vector3(0,2,0)));
+  camera.fov=lerp(camera.fov,58+S.speed*0.18,0.05); camera.updateProjectionMatrix();
+
+  // ----- rings -----
+  if(S.phase==='rings'){
+    rings.forEach((r,i)=>{ if(!r.done){ r.mesh.material.emissiveIntensity = i===S.ringIdx ? 1.4+Math.sin(performance.now()/180)*0.5 : 0.5; r.mesh.rotation.z+=dt*0.4; } });
+    const r=rings[S.ringIdx];
+    if(r){
+      const rel=S.pos.clone().sub(r.mesh.position); const d=rel.dot(r.normal);
+      if(r.prevD!==null && r.prevD<0 && d>=0){
+        const lateral=rel.clone().sub(r.normal.clone().multiplyScalar(d)).length();
+        r.done=true;
+        if(lateral<RING_R){ S.ringsHit++; chime(); toast(praise[S.ringIdx%praise.length]); r.mesh.material.color.set(0x7fe7ff); r.mesh.material.emissive.set(0x3fb8ff); }
+        else { bloop(); toast('فاتتكِ البوابة','#ffb4a8'); r.mesh.material.emissiveIntensity=0.15; say('لا بأس، ركّزي على السهم في الأعلى، وستصلين للبوابة التالية.',undefined,3500); }
+        S.ringIdx++;
+        if(S.ringIdx===5 && !S.branch){ runGlitch(); }
+        else if(S.ringIdx>=rings.length){ S.phase='landing'; say(handMode?'آخر بوابة! الآن اتجهي إلى جزيرة الأكاديمية (الضوء الأزرق) واهبطي على المدرج. اخفضي يديكِ ببطء.':'آخر بوابة! الآن اتجهي إلى جزيرة الأكاديمية (الضوء الأزرق) واهبطي على المدرج بالسهم ↓ ببطء.',undefined,0); }
+      } else r.prevD=d;
+      // skip a ring if the player is far past / lost
+      if(!r.done && rel.length()>650){ r.done=true; r.mesh.material.emissiveIntensity=0.15; S.ringIdx++; if(S.ringIdx===5&&!S.branch) runGlitch(); else if(S.ringIdx>=rings.length) S.phase='landing'; }
+    }
+  }
+  rings.forEach(r=>{ if(r.done && r.mesh.visible){ r.mesh.scale.multiplyScalar(1+dt*0.6); r.mesh.material.transparent=true; r.mesh.material.opacity=Math.max(0,(r.mesh.material.opacity??1)-dt*0.8); if(r.mesh.material.opacity<=0) r.mesh.visible=false; } });
+
+  // ----- landing -----
+  if(S.phase==='landing'){
+    const top=academy.position.y+1.5+1.4;
+    const h=Math.hypot(S.pos.x-academy.position.x,S.pos.z-academy.position.z);
+    if(h<42 && S.pos.y<top+9){
+      S.phase='landed'; S.onGround=true; S.pos.y=top; chime();
+      say('هبوط ممتاز يا رينا! مرحبًا بكِ في الأكاديمية.',undefined,0);
+      finish('A');
+    } else if(h<45 && S.pos.y<top) S.pos.y=top+0.5;
+  }
+
+  // ----- follow the coordinates -----
+  if(S.phase==='follow'){
+    S.darkness=Math.min(1,S.darkness+dt*0.12);
+    const dist=Math.hypot(S.pos.x-lost.position.x,S.pos.z-lost.position.z);
+    nav(`<span class="coord">N 47°13'09" · E 001°00'01"</span><br>المسافة: <b class="coord">${Math.round(dist*10)} م</b><br><span style="color:#c9b3ff">الرحلة 001... لقد عدنا</span>`,true);
+    S.lightningT-=dt; if(S.lightningT<=0){ S.lightningT=rand(2,5); $('flash').style.opacity=.55; setTimeout(()=>$('flash').style.opacity=0,90); setTimeout(thunder,250); }
+    if(dist<190){
+      S.phase='arrive'; S.timeScale=1;
+      // turn toward the island and glide in
+      const tgt=Math.atan2(-(lost.position.x-S.pos.x),-(lost.position.z-S.pos.z)); S._arriveYaw=tgt;
+      say('...','— صمت —',2500);
+      setTimeout(()=>{ lostTowerLight.color.set(0xd9c8ff); lostTowerLight.emissive.set(0xb08cff); lostTowerLight.emissiveIntensity=2; lostLight.intensity=6; chime(); },2200);
+      finish('B');
+    }
+  }
+  if(S.phase==='arrive'){ S.yaw=lerp(S.yaw,S.yaw+wrapAngle(S._arriveYaw-S.yaw),1-Math.exp(-1*dt)); S.pos.y=lerp(S.pos.y,lost.position.y+30,1-Math.exp(-0.8*dt)); S.darkness=Math.max(0.6,S.darkness-dt*0.2); }
+
+  // ----- atmosphere (warm ↔ storm) -----
+  const dk=S.darkness;
+  scene.fog.color.copy(FOG_WARM).lerp(FOG_DARK,dk);
+  scene.fog.far=lerp(1500,700,dk);
+  skyUniforms.top.value.set(SKY_WARM.top).lerp(new THREE.Color(SKY_DARK.top),dk);
+  skyUniforms.mid.value.set(SKY_WARM.mid).lerp(new THREE.Color(SKY_DARK.mid),dk);
+  skyUniforms.horizon.value.set(SKY_WARM.horizon).lerp(new THREE.Color(SKY_DARK.horizon),dk);
+  skyUniforms.sunCol.value.set(SKY_WARM.sun).lerp(new THREE.Color(SKY_DARK.sun),dk);
+  sun.intensity=lerp(2.2,0.5,dk); hemi.intensity=lerp(0.9,0.45,dk);
+
+  // ----- audio -----
+  if(AC){ windFilter.frequency.value=250+S.speed*12; windGain.gain.value=S.onGround?0.03:0.05+S.speed*0.0012+dk*0.04; }
+
+  // ----- HUD -----
+  $('hAlt').textContent=Math.round(S.pos.y*10);
+  $('hSpd').textContent=Math.round(S.speed*6);
+  let hd=Math.round(((-S.yaw*180/Math.PI)%360+360)%360); $('hHdg').textContent=String(hd).padStart(3,'0')+'°';
+  if(S.phase==='follow'||S.phase==='arrive'){ $('hGoalLbl').textContent='الوجهة'; $('hGoal').textContent='؟؟؟'; }
+  else { $('hGoalLbl').textContent='البوابات'; $('hGoal').textContent=`${S.ringsHit}/${rings.length}`; }
+
+  let target=null, label='';
+  if(S.phase==='rings' && rings[S.ringIdx]){ target=rings[S.ringIdx].mesh.position; label=`البوابة ${S.ringIdx+1}`; }
+  else if(S.phase==='landing'){ target=academy.position; label='جزيرة الأكاديمية'; }
+  else if(S.phase==='follow'){ target=lost.position; label='الإحداثيات المجهولة'; }
+  if(target){
+    $('arrowWrap').style.opacity=1;
+    const ty=Math.atan2(-(target.x-S.pos.x),-(target.z-S.pos.z)); const diff=wrapAngle(ty-S.yaw);
+    $('arrow').style.transform=`rotate(${-diff}rad)`;
+    const dy=target.y-S.pos.y + (S.phase==='landing'?5:0);
+    $('vhint').textContent= dy>12?'▲ أعلى': dy<-12?'▼ أسفل':'';
+    $('targetLbl').textContent=label;
+  } else $('arrowWrap').style.opacity=0;
+}
+
+function loop(){
+  const dt=Math.min(clock.getDelta(),0.05);
+  update(dt);
+  stormClouds.forEach((c,i)=>{ c.material.rotation+=dt*0.02*(i%2?1:-1); });
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+loop();
+
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+</script>
+</body>
+</html>
