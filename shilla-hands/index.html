@@ -585,6 +585,8 @@ const Hands = {
 };
 
 function setBar(p) { const b = document.getElementById('bar'); if (!b) return; b.hidden = false; b.firstElementChild.style.width = clamp(p, 0, 100) + '%'; }
+function handPts(h) { const P = [h.palm]; if (h.lm) for (const i of [4, 8, 12, 16, 20]) P.push(h.lm[i]); else P.push(h.tip); return P; }
+function handHit(h, test) { for (const p of handPts(h)) { const r = test(p.x, p.y); if (r) return { p, r }; } return null; }
 /* ============ صور الشلة ============ */
 const DEFAULT_FACES = [
   { name: 'محمد', skin: '#e8b98f', bg: '#ff8fb1', style: 'ghutraR' },
@@ -1227,12 +1229,11 @@ GAMES.push({
     // الضرب
     this.hcd.L -= dt; this.hcd.R -= dt;
     for (const h of hands) {
-      if (!(h.gesture === 'fist' || h.gesture === 'open')) continue;
       const punch = h.speed > MIN * 1.7 || (Hands.mode === 'mouse' && h.changed && h.gesture === 'fist');
       if (!punch || this.hcd[h.side] > 0) continue;
       for (const f of this.fr) {
         if (f.ko || f.inv > 0) continue;
-        if (!figHit(f, h.palm.x, h.palm.y, MIN * .015)) continue;
+        if (!handHit(h, (x, y) => figHit(f, x, y, MIN * .012))) continue;
         this.hcd[h.side] = .35;
         if (!f.fake && f.st === 'run' && Math.random() < .18 + .3 * (1 - frac)) { f.inv = .5; f.vx = (f.x > h.palm.x ? 1 : -1) * MIN * 2.2; f.vy = rand(-1, 1) * MIN * .5; FX.pop(pick(['فاتتك 😜', 'هههه زاغ!', 'ما لحقت!', 'أسرع منك 💨']), f.x, f.y - f.s * 3.6, { size: Math.max(MIN * .035, f.s * .5), color: '#ff9fd8' }); SFX.whoosh(); break; }
         if (f.hide > 0 && !this.peek(f)) { f.inv = .3; FX.burst(f.x, f.y - f.s * 1.5, 20, { color: ['#2ecc71', '#27ae60', '#7CFF6B'], type: 'confetti', g: 400 }); FX.pop('مختبي 🌳', f.x, f.y - f.s * 3.5, { size: f.s * .6 }); SFX.whoosh(); continue; }
@@ -1376,8 +1377,7 @@ GAMES.push({
       if (e.dancer && e.stT > 3.5) { e.dancer = false; e.st = 'walk'; }
       for (const h of hands) {
         if (!['walk', 'eat', 'watch'].includes(e.st) || e.dancer) continue;
-        if (h.speed < MIN * .7 && h.gesture !== 'open') continue;
-        if (!figHit(Object.assign({ pose: null }, e), h.palm.x, h.palm.y, MIN * .03)) continue;
+        if (!handHit(h, (x, y) => figHit(e, x, y, MIN * .02))) continue;
         const was = e.st === 'eat';
         let ax = h.vx, ay = h.vy; const awx = e.x - c.x, awy = e.y - c.y, al = Math.hypot(awx, awy) || 1;
         ax += awx / al * MIN * 1.2; ay += awy / al * MIN * 1.2; const sp = Math.max(MIN * 1.6, Math.hypot(ax, ay) * .9), a = Math.atan2(ay, ax);
@@ -1390,7 +1390,7 @@ GAMES.push({
     for (let i = this.gifts.length - 1; i >= 0; i--) {
       const g = this.gifts[i]; g.t += dt;
       if (g.fly) { g.x += g.vx * dt; g.y += g.vy * dt; g.rot += dt * 10; if (g.x < -100 || g.x > VW + 100 || g.y < -100 || g.y > VH + 100) this.gifts.splice(i, 1); continue; }
-      for (const h of hands) if (dist(h.palm.x, h.palm.y, g.x, g.y) < MIN * .07) { g.fly = true; g.vx = (h.vx || rand(-1, 1) * MIN) * 1.2 + Math.sign(g.x - c.x) * MIN; g.vy = (h.vy || -MIN) * 1.2; SFX.whoosh(); FX.pop('رميتها! 👋', g.x, g.y - MIN * .06); this.score += 80; }
+      for (const h of hands) if (!g.fly && handHit(h, (x, y) => dist(x, y, g.x, g.y) < MIN * .06)) { g.fly = true; g.vx = (h.vx || rand(-1, 1) * MIN) * 1.2 + Math.sign(g.x - c.x) * MIN; g.vy = (h.vy || -MIN) * 1.2; SFX.whoosh(); FX.pop('رميتها! 👋', g.x, g.y - MIN * .06); this.score += 80; }
       if (!g.fly && g.t > 3.2) { this.gifts.splice(i, 1); SFX.pop(); SFX.splat(); FX.confetti(60, g.x, g.y); for (let k = 0; k < 160; k++) FX.add({ x: rand(0, VW), y: rand(-VH * .3, VH * .6), vx: rand(-30, 30), vy: rand(30, 90), g: 10, life: rand(2.5, 3.5), size: rand(.02, .045) * MIN, color: pick(['#ff4fd8', '#3ef0ff', '#ffd23f', '#7CFF6B', '#fff']), type: 'confetti', vr: rand(-4, 4), drag: .995 }); FX.banner('🎉 انفجرت الهدية! ما تشوف شي 😂', '#ff4fd8'); }
     }
     this.ev -= dt;
